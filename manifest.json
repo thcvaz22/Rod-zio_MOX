@@ -1,0 +1,19 @@
+{
+  "name": "Sistema de Rodízio - RGdB",
+  "short_name": "Rodízio RGdB",
+  "description": "Sistema de gestão de rodízio, formação e cadastro de postos e funcionários - RGdB",
+  "start_url": "./index.html",
+  "scope": "./",
+  "id": "/rodizio-rgdb",
+  "display": "standalone",
+  "background_color": "#050c16",
+  "theme_color": "#050c16",
+  "orientation": "any",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
