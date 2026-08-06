@@ -1,0 +1,2170 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RGdB · Sistema de Rodízio</title>
+<meta name="description" content="Sistema de gestão de rodízio, formação e cadastro de postos e funcionários - RGdB">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#050c16">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rodízio RGdB">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#050c16;
+    --blue:#2f6fed;
+    --teal:#17c1a0;
+    --green:#3ddc84;
+    --violet:#5b4fd8;
+    --ink:#0d1526;
+    --amber:#ffcc33;
+    --amber-ink:#5c4200;
+    --red:#ff5c5c;
+    --radius:14px;
+    --font-display:'Space Grotesk', sans-serif;
+    --font-body:'Inter', sans-serif;
+    --font-mono:'JetBrains Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  body,h1,h2,h3,h4,p,form{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    background:var(--bg);
+    font-family:var(--font-body);
+    color:var(--ink);
+    position:relative;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  body::before, body::after{
+    content:"";
+    position:fixed;
+    inset:-20%;
+    z-index:0;
+    pointer-events:none;
+    filter:blur(80px);
+    opacity:.55;
+  }
+  body::before{
+    background:
+      radial-gradient(45% 35% at 20% 15%, var(--teal), transparent 60%),
+      radial-gradient(40% 40% at 82% 8%, var(--blue), transparent 60%),
+      radial-gradient(50% 40% at 50% 95%, var(--green), transparent 60%);
+    animation: auroraShift 24s ease-in-out infinite alternate;
+  }
+  body::after{
+    background: radial-gradient(35% 30% at 68% 55%, var(--violet), transparent 65%);
+    animation: auroraShift 32s ease-in-out infinite alternate-reverse;
+  }
+  @keyframes auroraShift{
+    0%{ transform: translate3d(0,0,0) scale(1); }
+    100%{ transform: translate3d(3%, -4%, 0) scale(1.08); }
+  }
+  @media (prefers-reduced-motion: reduce){ body::before, body::after{ animation:none; } }
+
+  .app{ position:relative; z-index:1; }
+
+  .topbar{
+    position:sticky; top:0; z-index:20;
+    display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+    padding:14px 28px;
+    background:rgba(6,14,28,.65);
+    backdrop-filter:blur(14px);
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  .logo{height:32px; display:block; border-radius:4px;}
+  .brand-tag{font-family:var(--font-display); font-size:.75rem; letter-spacing:.08em; text-transform:uppercase; color:#8fb4d6;}
+  .topbar-actions{display:flex; align-items:center; gap:12px; margin-left:auto; flex-wrap:wrap;}
+  .main-tabs{display:flex; gap:6px; flex-wrap:wrap;}
+  .main-tabs button{
+    font-family:var(--font-display); font-weight:600; letter-spacing:.02em; font-size:.88rem;
+    background:transparent; border:1px solid rgba(255,255,255,.2); color:#dbe8f5;
+    padding:9px 18px; border-radius:999px; cursor:pointer; transition:.15s;
+  }
+  .main-tabs button.active, .main-tabs button:hover{
+    background:linear-gradient(120deg, var(--teal), var(--blue));
+    border-color:transparent; color:#04101f;
+  }
+  .icon-btn{
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.25); color:#e7f0f8;
+    padding:8px 16px; border-radius:999px; cursor:pointer; font-size:.85rem;
+    font-family:var(--font-display); font-weight:600; display:inline-flex; align-items:center; gap:6px;
+    transition:.15s;
+  }
+  .icon-btn:hover{ background:rgba(255,255,255,.18); }
+  button:focus-visible, input:focus-visible, select:focus-visible{
+    outline:2px solid var(--teal); outline-offset:2px;
+  }
+
+  .page{ display:none; max-width:1320px; margin:0 auto; padding:26px 24px 60px; }
+  .page.active{ display:block; }
+
+  .day-tabs{display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap;}
+  .day-tabs button{
+    font-family:var(--font-mono); font-weight:700; font-size:.82rem; letter-spacing:.02em;
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.22); color:#e7f0f8;
+    padding:8px 16px; border-radius:999px; cursor:pointer; transition:.15s;
+  }
+  .day-tabs button.active, .day-tabs button:hover{
+    background:linear-gradient(120deg, var(--green), var(--teal)); color:#04101f; border-color:transparent;
+  }
+
+  .card{
+    background:rgba(244,248,251,.97);
+    border-radius:var(--radius);
+    padding:22px 24px 26px;
+    box-shadow:0 20px 50px -20px rgba(0,0,20,.55);
+    border:1px solid rgba(255,255,255,.6);
+  }
+  .stacked-card{ margin-top:22px; }
+
+  .setor-selector-panel{ margin-bottom:16px; }
+  .setor-toggle{
+    background:none; border:none; color:#5b7185; font-family:var(--font-body); font-size:.8rem;
+    cursor:pointer; padding:4px 2px; display:inline-flex; align-items:center; gap:6px;
+  }
+  .setor-toggle:hover{ color:#0d3b66; }
+  .setor-toggle .chev{ font-size:.65rem; transition:.15s transform; }
+  .setor-toggle.open .chev{ transform:rotate(180deg); }
+  .setor-selector{ display:flex; flex-wrap:wrap; gap:10px 16px; margin-top:8px; padding:12px 14px; background:#f4f8fb; border-radius:10px; border:1px solid #e3eaf0; }
+  .setor-selector.hidden{ display:none; }
+  .setor-check{ display:flex; align-items:center; gap:6px; font-size:.85rem; color:#1b2a3a; }
+
+  .crit-hint{ font-size:.76rem; color:#5b7185; margin:14px 0 0; }
+
+  .rodizio-toolbar{display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px;}
+  .btn{
+    font-family:var(--font-display); font-weight:600; font-size:.9rem; border:none; border-radius:10px;
+    padding:11px 20px; cursor:pointer; color:#04101f;
+    background:linear-gradient(120deg, var(--green), var(--teal) 60%, var(--blue));
+    box-shadow:0 10px 24px -8px rgba(30,190,150,.55); transition:.15s transform;
+  }
+  .btn:hover{ transform:translateY(-1px); }
+  .btn.ghost{ background:#fff; color:#1b2a3a; border:1px solid #c8d3dc; box-shadow:none; }
+
+  .rodizio-grids{display:grid; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); gap:22px;}
+  .area-title{font-family:var(--font-display); font-size:1rem; display:inline-flex; align-items:center; gap:8px; padding:5px 14px; border-radius:8px; margin-bottom:12px;}
+  .area-title.cvp{ background:rgba(23,193,160,.12); color:#0b7a63; border-left:4px solid var(--teal); }
+  .area-title.cvu{ background:rgba(47,111,237,.12); color:#1c4fb0; border-left:4px solid var(--blue); }
+
+  table.rodizio{ width:100%; border-collapse:collapse; font-size:.9rem; }
+  table.rodizio th{
+    text-align:left; font-family:var(--font-display); font-size:.72rem; text-transform:uppercase;
+    letter-spacing:.06em; color:#33506b; padding:9px 10px; border-bottom:2px solid #d7e2ea;
+  }
+  table.rodizio td{ padding:8px 10px; border-bottom:1px solid #e6edf2; }
+  table.rodizio tr:last-child td{ border-bottom:none; }
+  td.post-code{ font-family:var(--font-mono); font-weight:700; cursor:pointer; color:#0d3b66; white-space:nowrap; }
+  td.post-code:hover{ text-decoration:underline; }
+  td.cell{ cursor:pointer; border-radius:8px; }
+  td.cell:hover{ background:#eef4f8; }
+  td.cell.empty{ color:#9fb0bd; font-style:italic; }
+  td.cell.senior{ background:var(--amber); color:var(--amber-ink); font-weight:700; border-radius:8px; }
+  td.cell.locked{ background:#e7edff; color:#1c4fb0; font-weight:600; cursor:default; }
+
+  .crit-dot{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+  .crit-dot.crit-verde{ background:var(--green); }
+  .crit-dot.crit-amarelo{ background:var(--amber); }
+  .crit-dot.crit-vermelho{ background:var(--red); }
+  .crit-badge{ font-size:.72rem; padding:2px 9px; border-radius:999px; font-family:var(--font-display); font-weight:600; display:inline-flex; align-items:center; gap:5px; }
+  .crit-badge.crit-verde{ background:rgba(61,220,132,.15); color:#1f8a4c; border:1px solid rgba(61,220,132,.4); }
+  .crit-badge.crit-amarelo{ background:rgba(255,204,51,.18); color:#8a6d00; border:1px solid rgba(255,204,51,.5); }
+  .crit-badge.crit-vermelho{ background:rgba(255,92,92,.15); color:#b13a2f; border:1px solid rgba(255,92,92,.4); }
+
+  .area-badge, .setor-badge{ font-size:.72rem; padding:2px 9px; border-radius:999px; font-family:var(--font-display); font-weight:600; background:#eef4f8; color:#33506b; border:1px solid #d7e2ea; }
+  .factory-badge{ font-size:.72rem; padding:2px 9px; border-radius:999px; font-family:var(--font-display); font-weight:600; }
+  .factory-badge.cvp{ background:rgba(23,193,160,.15); color:#0b7a63; border:1px solid rgba(23,193,160,.4); }
+  .factory-badge.cvu{ background:rgba(47,111,237,.15); color:#1c4fb0; border:1px solid rgba(47,111,237,.4); }
+
+  .ausentes-panel{ margin-top:26px; }
+  .ausentes-panel h3{ font-family:var(--font-display); font-size:1rem; color:#0d3b66; }
+  .hint-small{ font-size:.78rem; color:#5b7185; margin:6px 0 12px; }
+  .ausentes-slots{ display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:12px; }
+  .ausente-slot{
+    border:1.5px dashed #c3d2dd; border-radius:12px; padding:12px 14px; min-height:20px;
+    display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.5);
+  }
+  .ausente-slot.filled{ border-style:solid; border-color:#e3eaf0; background:#fff; justify-content:space-between; }
+  .ausente-slot button.add{ background:none; border:none; color:#0d3b66; font-weight:600; cursor:pointer; font-family:var(--font-display); font-size:.85rem; }
+  .ausente-slot button.rm{ background:none; border:none; color:#b13a2f; font-weight:700; cursor:pointer; font-size:.95rem; }
+
+  .backup-panel{ margin-top:26px; padding-top:20px; border-top:1px solid #e3eaf0; }
+  .backup-panel h3{ font-family:var(--font-display); font-size:1rem; color:#0d3b66; }
+  .backup-actions{ display:flex; gap:12px; flex-wrap:wrap; margin-top:10px; }
+
+  .cadastro-grid, .listas-grid{ display:grid; grid-template-columns:1fr 1fr; gap:22px; align-items:start; }
+  .cadastro-grid h2, .listas-grid h2, .stacked-card h2{ font-family:var(--font-display); font-size:1.15rem; color:#0d1526; margin-bottom:4px; }
+  .field-label{ display:block; font-family:var(--font-display); font-size:.76rem; text-transform:uppercase; letter-spacing:.05em; color:#33506b; margin:16px 0 6px; }
+  #form-funcionario input[type=text], #form-posto input[type=text], #form-setor input[type=text]{
+    width:100%; padding:10px 12px; border-radius:8px; border:1px solid #d3dde4; font-family:var(--font-body); font-size:.95rem;
+  }
+  #posto-setor, #formacao-aprendiz, #formacao-posto, #formacao-turno, #formacao-instrutor{
+    width:100%; padding:10px 12px; border-radius:8px; border:1px solid #d3dde4; font-family:var(--font-body); font-size:.95rem;
+  }
+  .checkbox-groups{ display:flex; gap:26px; flex-wrap:wrap; }
+  .area-group h4{ font-family:var(--font-mono); font-size:.72rem; color:#6a8299; margin:0 0 6px; text-transform:uppercase; }
+  label.chk{ display:block; font-size:.87rem; margin:3px 0; color:#1b2a3a; }
+  .radio-row{ display:flex; gap:22px; flex-wrap:wrap; }
+  .radio-row label{ font-size:.92rem; }
+  .checkbox-row{ display:flex; flex-wrap:wrap; gap:8px 22px; }
+  form .btn{ margin-top:20px; }
+  .setor-chips-preview .chip{ cursor:default; }
+
+  .search-box{ width:100%; padding:10px 14px; border-radius:999px; border:1px solid #d3dde4; margin-bottom:14px; font-family:var(--font-body); font-size:.9rem; }
+  .list-container{ max-height:560px; overflow:auto; padding-right:4px; }
+  .list-item{ border:1px solid #e3eaf0; border-radius:10px; padding:13px 15px; margin-bottom:12px; }
+  .list-item-head{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .list-item.open .list-item-head{ margin-bottom:10px; }
+  .list-item-head strong{ font-family:var(--font-display); font-size:.98rem; }
+  .list-item-head .del{ background:none; border:1px solid #f0c1bd; color:#b13a2f; padding:5px 12px; border-radius:8px; cursor:pointer; font-size:.76rem; font-family:var(--font-body); }
+  .icon-edit{ margin-left:auto; background:none; border:1px solid #c8d3dc; color:#33506b; padding:5px 12px; border-radius:8px; cursor:pointer; font-size:.76rem; font-family:var(--font-display); }
+  .icon-edit:hover{ background:#eef4f8; }
+  .restrict-toggle{ background:none; border:1px solid #c8d3dc; color:#33506b; padding:5px 12px; border-radius:8px; cursor:pointer; font-size:.76rem; font-family:var(--font-display); }
+  .restrict-toggle.active{ background:rgba(61,220,132,.18); border-color:rgba(61,220,132,.55); color:#1f8a4c; font-weight:700; }
+  .mini-count{ font-size:.72rem; color:#7c93a6; background:#eef4f8; padding:2px 9px; border-radius:999px; }
+  .chips{ margin-bottom:8px; }
+  .chip{ display:inline-flex; align-items:center; gap:6px; background:#e7f0f7; color:#0d3b66; padding:4px 10px; border-radius:999px; font-family:var(--font-mono); font-size:.78rem; margin:3px 5px 3px 0; }
+  .chip button{ border:none; background:none; cursor:pointer; color:#0d3b66; font-weight:700; padding:0; }
+  .list-item em{ color:#7c93a6; font-style:italic; font-size:.85rem; }
+  .list-item select{ width:100%; padding:8px 10px; border-radius:8px; border:1px solid #d3dde4; font-family:var(--font-body); font-size:.85rem; }
+  .mini-select{ font-size:.76rem; padding:3px 6px; border-radius:6px; border:1px solid #d3dde4; margin-left:4px; }
+  .empty-msg{ color:#7c93a6; font-style:italic; }
+
+  .formacao-item{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; padding:9px 0; border-bottom:1px solid #eef2f5; font-size:.88rem; }
+  .formacao-item:last-child{ border-bottom:none; }
+  .formacao-item-main{ flex:1; min-width:0; }
+  .suggestion-close{ background:none; border:none; color:#b13a2f; font-weight:700; cursor:pointer; font-size:.9rem; padding:2px 7px; border-radius:6px; flex-shrink:0; }
+  .suggestion-close:hover{ background:#fdeceb; }
+  .mono-tag{ font-family:var(--font-mono); font-weight:700; color:#0d3b66; }
+  .formacao-edit-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-top:6px; }
+  .formacao-edit-grid label{ font-size:.7rem; color:#33506b; font-family:var(--font-display); text-transform:uppercase; letter-spacing:.04em; display:block; }
+  .formacao-edit-grid select{ margin-top:4px; width:100%; padding:6px 8px; border-radius:6px; border:1px solid #d3dde4; font-family:var(--font-body); font-size:.85rem; }
+
+  .modal-overlay{ position:fixed; inset:0; background:rgba(3,8,18,.6); backdrop-filter:blur(3px); display:flex; align-items:center; justify-content:center; z-index:100; padding:20px; }
+  .modal-overlay.hidden{ display:none; }
+  .modal{ background:#fff; border-radius:16px; max-width:480px; width:100%; max-height:80vh; overflow:auto; padding:22px 24px; box-shadow:0 30px 80px -20px rgba(0,0,0,.5); position:relative; }
+  .modal h3{ font-family:var(--font-display); margin:0 0 6px; padding-right:20px; }
+  .modal-close{ position:absolute; top:18px; right:20px; cursor:pointer; font-size:1.1rem; color:#5b7185; }
+  .modal-hint{ font-size:.85rem; color:#5b7185; margin-bottom:10px; }
+  .modal-search{ width:100%; padding:9px 12px; border-radius:8px; border:1px solid #d3dde4; margin-bottom:10px; font-family:var(--font-body); box-sizing:border-box; }
+  .modal-list{ max-height:48vh; overflow:auto; }
+  .modal-row{ display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #eef2f5; font-size:.9rem; }
+  .modal-row:last-child{ border-bottom:none; }
+  .assign-row{ justify-content:space-between; }
+  .status{ font-size:.75rem; padding:2px 9px; border-radius:999px; background:#eef4f8; color:#33506b; }
+  .status.blocked{ background:#fdeceb; color:#b13a2f; }
+  .status.ok{ background:#e7f7ee; color:#12794a; }
+  .modal-row button{
+    background:linear-gradient(120deg, var(--teal), var(--blue)); border:none; color:#04101f; font-weight:600;
+    padding:6px 14px; border-radius:8px; cursor:pointer; font-family:var(--font-display); font-size:.8rem;
+  }
+  .modal-footer-actions{ display:flex; gap:10px; margin-top:16px; }
+  .save-days{ display:flex; flex-wrap:wrap; gap:8px; }
+
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translate(-50%,12px);
+    background:#0d1526; color:#eaf3fa; padding:12px 22px; border-radius:999px;
+    font-family:var(--font-display); font-size:.86rem; opacity:0; pointer-events:none;
+    transition:.25s; z-index:200; box-shadow:0 10px 30px rgba(0,0,0,.4);
+  }
+  .toast.show{ opacity:1; pointer-events:auto; transform:translate(-50%,0); }
+
+  .footnote{ text-align:center; font-size:.72rem; color:#5b7a94; margin-top:26px; }
+
+  @media (max-width:900px){
+    .rodizio-grids, .cadastro-grid, .listas-grid{ grid-template-columns:1fr; }
+  }
+  @media (max-width:640px){
+    .topbar{ padding:12px 16px; }
+    .topbar-actions{ width:100%; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <img class="logo" src="data:image/jpeg;base64,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" alt="RGdB — Renault Geely do Brasil">
+    <span class="brand-tag">Sistema de Rodízio</span>
+    <div class="topbar-actions">
+      <nav class="main-tabs">
+        <button data-page="inicio" class="active">Início</button>
+        <button data-page="formacao">Formação</button>
+        <button data-page="cadastro">Cadastro</button>
+        <button data-page="listas">Listas</button>
+        <button data-page="backup">Backup</button>
+      </nav>
+    </div>
+  </header>
+
+  <main id="page-inicio" class="page active">
+    <div class="day-tabs">
+      <button data-day="segunda" class="active">Segunda</button>
+      <button data-day="terca">Terça</button>
+      <button data-day="quarta">Quarta</button>
+      <button data-day="quinta">Quinta</button>
+      <button data-day="sexta">Sexta</button>
+      <button data-day="sabado">Sábado</button>
+    </div>
+    <div class="card">
+      <div class="setor-selector-panel">
+        <button class="setor-toggle" id="setor-toggle-btn" type="button">
+          <span id="setor-toggle-label">Setores exibidos</span> <span class="chev">▾</span>
+        </button>
+        <div class="setor-selector hidden" id="setor-selector"></div>
+      </div>
+      <div class="rodizio-toolbar">
+        <button class="btn" id="btn-gerar">⚡ Gerar rodízio automaticamente</button>
+        <button class="btn ghost" id="btn-copiar">📋 Copiar Rodízio</button>
+        <button class="btn ghost" id="btn-limpar">🧹 Limpar Rodízio</button>
+        <button class="btn" id="btn-exportar">📤 Exportar imagem</button>
+      </div>
+      <div class="rodizio-grids" id="rodizio-grids"></div>
+      <p class="crit-hint">🟢 Verde · 🟡 Amarelo · 🔴 Vermelho — classificação do posto · 🔒 vaga travada por Formação</p>
+      <div class="ausentes-panel">
+        <h3>Ausentes</h3>
+        <p class="hint-small">Remover um ausente não desfaz substituições já feitas — gere novamente se precisar reverter.</p>
+        <div class="ausentes-slots" id="ausentes-slots"></div>
+      </div>
+    </div>
+    <p class="footnote">Criado por: Thiago Vaz - LB14762</p>
+  </main>
+
+  <main id="page-formacao" class="page">
+    <div class="card">
+      <div class="setor-selector-panel">
+        <button class="setor-toggle" id="formacao-toggle-btn" type="button">
+          <span id="formacao-toggle-label">💡 Sugestão de Formação</span> <span class="chev">▾</span>
+        </button>
+        <div class="setor-selector hidden" id="formacao-suggestion-content"></div>
+      </div>
+      <p class="hint-small" style="margin-top:0;">Analisa cobertura mínima de 6 operadores por posto, mínimo de 3 postos por funcionário e diversificação entre postos verdes, amarelos e vermelhos.</p>
+    </div>
+    <section class="card stacked-card">
+      <h2>Registrar Formação</h2>
+      <form id="form-formacao">
+        <label class="field-label">Funcionário que vai se formar (aprendiz)</label>
+        <select id="formacao-aprendiz"></select>
+        <label class="field-label">Posto</label>
+        <select id="formacao-posto"></select>
+        <label class="field-label">Rodízio (turno)</label>
+        <select id="formacao-turno">
+          <option value="0">1º</option>
+          <option value="1">2º</option>
+          <option value="2">3º</option>
+        </select>
+        <label class="field-label">Quem irá formá-lo (instrutor)</label>
+        <select id="formacao-instrutor"></select>
+        <button type="submit" class="btn">Registrar Formação</button>
+      </form>
+    </section>
+    <section class="card stacked-card">
+      <h2>Formações registradas</h2>
+      <p class="hint-small">Aplicadas de segunda a sexta, travadas no posto e turno escolhidos — não mudam nem ao gerar o rodízio automaticamente.</p>
+      <div id="lista-formacoes" class="list-container"></div>
+    </section>
+    <p class="footnote">Criado por: Thiago Vaz - LB14762</p>
+  </main>
+
+  <main id="page-cadastro" class="page">
+    <div class="cadastro-grid">
+      <section class="card">
+        <h2>Cadastrar Funcionário</h2>
+        <form id="form-funcionario">
+          <label class="field-label">Nome do funcionário</label>
+          <input type="text" id="func-nome" placeholder="Ex: Maria Souza" required>
+          <label class="field-label">Postos de trabalho</label>
+          <div id="func-postos-list" class="checkbox-groups"></div>
+          <label class="chk" style="margin-top:14px;"><input type="checkbox" id="func-restrito"> Restrito (só pode ser escalado em postos verdes)</label>
+          <button type="submit" class="btn">Cadastrar funcionário</button>
+        </form>
+      </section>
+      <section class="card">
+        <h2>Cadastrar Posto</h2>
+        <form id="form-posto">
+          <label class="field-label">Nome do posto</label>
+          <input type="text" id="posto-nome" placeholder="Ex: 01A, KIT1, 4D..." required>
+          <label class="field-label">Setor</label>
+          <select id="posto-setor"></select>
+          <label class="field-label">EPIs necessários</label>
+          <div class="checkbox-row">
+            <label class="chk"><input type="checkbox" name="posto-epi" value="Sapato de segurança" checked> Sapato de segurança</label>
+            <label class="chk"><input type="checkbox" name="posto-epi" value="Casquete" checked> Casquete</label>
+            <label class="chk"><input type="checkbox" name="posto-epi" value="Protetor auricular" checked> Protetor auricular</label>
+            <label class="chk"><input type="checkbox" name="posto-epi" value="Óculos de proteção" checked> Óculos de proteção</label>
+            <label class="chk"><input type="checkbox" name="posto-epi" value="Luva anticorte" checked> Luva anticorte</label>
+            <label class="chk"><input type="checkbox" name="posto-epi" value="Mangote"> Mangote</label>
+          </div>
+          <label class="field-label">Classificação do posto</label>
+          <div class="radio-row">
+            <label><input type="radio" name="posto-criticidade" value="verde" checked> 🟢 Verde</label>
+            <label><input type="radio" name="posto-criticidade" value="amarelo"> 🟡 Amarelo</label>
+            <label><input type="radio" name="posto-criticidade" value="vermelho"> 🔴 Vermelho</label>
+          </div>
+          <button type="submit" class="btn">Cadastrar posto</button>
+        </form>
+      </section>
+    </div>
+    <section class="card stacked-card">
+      <h2>Cadastrar Setor</h2>
+      <form id="form-setor">
+        <label class="field-label">Nome do setor</label>
+        <input type="text" id="setor-nome" placeholder="Ex: SC5, MOX..." required>
+        <label class="field-label">Fábrica</label>
+        <div class="radio-row">
+          <label><input type="radio" name="setor-fabrica" value="CVP" checked> CVP</label>
+          <label><input type="radio" name="setor-fabrica" value="CVU"> CVU</label>
+        </div>
+        <button type="submit" class="btn">Cadastrar setor</button>
+      </form>
+      <div class="setor-chips-preview" id="setor-chips-preview" style="margin-top:16px;"></div>
+    </section>
+    <p class="footnote">Criado por: Thiago Vaz - LB14762</p>
+  </main>
+
+  <main id="page-listas" class="page">
+    <div class="listas-grid">
+      <section class="card">
+        <h2>Funcionários</h2>
+        <input type="text" id="search-func" class="search-box" placeholder="Buscar funcionário...">
+        <div id="lista-funcionarios" class="list-container"></div>
+      </section>
+      <section class="card">
+        <h2>Postos</h2>
+        <input type="text" id="search-posto" class="search-box" placeholder="Buscar posto...">
+        <div id="lista-postos" class="list-container"></div>
+      </section>
+    </div>
+    <section class="card stacked-card">
+      <h2>Setores</h2>
+      <input type="text" id="search-setor" class="search-box" placeholder="Buscar setor...">
+      <div id="lista-setores" class="list-container"></div>
+    </section>
+    <p class="footnote">Criado por: Thiago Vaz - LB14762</p>
+  </main>
+
+  <main id="page-backup" class="page">
+    <div class="card">
+      <h2>Backup Completo</h2>
+      <p class="hint-small">Salva tudo em um único arquivo: rodízio, ausências, formações, funcionários, postos e setores.</p>
+      <div class="backup-actions">
+        <button class="btn" id="btn-backup-completo-save">💾 Salvar backup completo</button>
+        <button class="btn ghost" id="btn-backup-completo-import">📥 Importar backup completo</button>
+        <input type="file" id="input-backup-completo-import" accept="application/json" style="display:none;">
+      </div>
+    </div>
+    <section class="card stacked-card">
+      <h2>Backup do Rodízio</h2>
+      <p class="hint-small">Salva só rodízio, ausências e formações travadas — não mexe no cadastro de funcionários, postos ou setores.</p>
+      <div class="backup-actions">
+        <button class="btn ghost" id="btn-backup-save">💾 Salvar backup</button>
+        <button class="btn ghost" id="btn-backup-import">📥 Importar backup</button>
+        <input type="file" id="input-backup-import" accept="application/json" style="display:none;">
+      </div>
+    </section>
+    <section class="card stacked-card">
+      <h2>Backup de Postos e Funcionários</h2>
+      <p class="hint-small">Salva só funcionários, postos e setores — não mexe no rodízio, ausências ou formações.</p>
+      <div class="backup-actions">
+        <button class="btn ghost" id="btn-backup-cadastro-save">💾 Salvar backup</button>
+        <button class="btn ghost" id="btn-backup-cadastro-import">📥 Importar backup</button>
+        <input type="file" id="input-backup-cadastro-import" accept="application/json" style="display:none;">
+      </div>
+    </section>
+    <p class="hint-small" style="margin-top:20px;">Toda alteração já fica salva automaticamente neste navegador — esses backups servem para guardar uma cópia à parte, transferir para outro computador ou voltar a uma versão anterior.</p>
+    <p class="footnote">Criado por: Thiago Vaz - LB14762</p>
+  </main>
+
+  <p class="footnote">Alterações são salvas automaticamente neste navegador. Use a aba Backup para guardar uma cópia à parte ou transferir para outro computador.</p>
+</div>
+
+<div class="modal-overlay hidden" id="modal-overlay">
+  <div class="modal" id="modal-content"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var EPI_OPTIONS = ['Sapato de segurança','Casquete','Protetor auricular','Óculos de proteção','Luva anticorte','Mangote'];
+  var DAYS = [
+    {id:'segunda', label:'Segunda'},
+    {id:'terca', label:'Terça'},
+    {id:'quarta', label:'Quarta'},
+    {id:'quinta', label:'Quinta'},
+    {id:'sexta', label:'Sexta'},
+    {id:'sabado', label:'Sábado'}
+  ];
+  var WEEKDAYS = ['segunda','terca','quarta','quinta','sexta'];
+
+  var DEFAULT_EPIS = ['Sapato de segurança','Casquete','Protetor auricular','Óculos de proteção','Luva anticorte'];
+
+  var seedSetores = [
+    {id:'s0', name:'SC5', factory:'CVP'},
+    {id:'s1', name:'MOX', factory:'CVP'}
+  ];
+
+  var seedPostDefs = [
+    ['01A','s0'],['01C','s0'],['KIT1','s0'],['KIT2','s0'],['KIT4','s0'],
+    ['03E','s0'],['04E','s0'],['05D','s0'],['06D','s0'],['07D','s0'],
+    ['07E','s0'],['08D','s0'],['11D','s0'],['12D','s0'],
+    ['1E','s1'],['4D','s1'],['4E','s1'],['5D','s1'],['5E','s1'],
+    ['6D','s1'],['6E','s1'],['7E','s1'],['7D','s1']
+  ];
+  var seedPosts = seedPostDefs.map(function(def, i){
+    return {id:'p'+i, name:def[0], setorId:def[1], epis:DEFAULT_EPIS.slice(), criticidade:'verde'};
+  });
+  function findPostByName(name){
+    for(var i=0;i<seedPosts.length;i++){ if(seedPosts[i].name===name) return seedPosts[i]; }
+    return null;
+  }
+
+  var seedEmployeeDefs = [
+    ['Anderson',['01A','12D','5E','4E']],
+    ['Alexandre',['01A','1E','6D']],
+    ['Lucas',['01A','12D','5D','5E']],
+    ['Gabriel',['01C','05D','4E','04E']],
+    ['Sony',['01C','05D','7E','01A','4D']],
+    ['Julio',['01C','04E','4E','7D']],
+    ['Willian',['KIT1','KIT2','KIT4']],
+    ['Daiane',['KIT1','KIT2','7D']],
+    ['Aline',['KIT1','07D','6E']],
+    ['Cleber',['KIT2','KIT4','08D']],
+    ['Fabio A',['KIT4','04E','4D','08D']],
+    ['Santiago',['03E','1E','7E']],
+    ['Thiago H',['03E','7E','7D','01C']],
+    ['Nelson',['03E','07E','5E','12D','4E']],
+    ['Eduardo',['04E','07D','07E','4E']],
+    ['Fabio M',['05D','08D','1E','6D']],
+    ['Tamara',['06D','07D','6D']],
+    ['Thiago',['06D','6D','6E','4D']],
+    ['Joyce',['06D','11D','6E','7D']],
+    ['Luiz',['07E','4D','5D']],
+    ['Marcelo',['08D','4D','5E']],
+    ['Thainá',['11D','12D','5D']],
+    ['Cristiano',['11D','4E','7D','6E','7E']]
+  ];
+  var seedEmployees = seedEmployeeDefs.map(function(def, i){
+    var postIds = def[1].map(function(n){ var p=findPostByName(n); return p?p.id:null; }).filter(Boolean);
+    return {id:'f'+i, name:def[0], postIds:postIds};
+  });
+
+  var state = {
+    posts: seedPosts,
+    employees: seedEmployees,
+    setores: seedSetores,
+    selectedSetorIds: seedSetores.map(function(s){ return s.id; }),
+    schedule: {},
+    absentees: {},
+    formacoes: [],
+    formacaoDismissed: []
+  };
+  DAYS.forEach(function(d){ state.absentees[d.id] = [null,null,null,null,null,null]; });
+
+  (function seedScheduleFromImages(){
+    function findEmployeeByName(name){
+      return state.employees.filter(function(e){ return e.name===name; })[0];
+    }
+    function buildSchedule(data){
+      var sched = {};
+      state.posts.forEach(function(p){ sched[p.id] = new Array(3).fill(null); });
+      Object.keys(data).forEach(function(postName){
+        var post = findPostByName(postName);
+        if(!post) return;
+        data[postName].forEach(function(empName, col){
+          var emp = findEmployeeByName(empName);
+          sched[post.id][col] = emp ? emp.id : null;
+        });
+      });
+      return sched;
+    }
+    var terca = {
+      '01A':['Anderson','Alexandre','Lucas'], '01C':['Gabriel','Sony','Julio'],
+      'KIT1':['Willian','Daiane','Aline'], 'KIT2':['Daiane','Cleber','Willian'],
+      'KIT4':['Fabio A','Willian','Cleber'], '03E':['Santiago','Thiago H','Nelson'],
+      '04E':['Julio','Eduardo','Fabio A'], '05D':['Fabio M','Gabriel','Sony'],
+      '06D':['Tamara','Thiago','Joyce'], '07D':['Eduardo','Aline','Tamara'],
+      '07E':['Nelson','Luiz','Eduardo'], '08D':['Cleber','Marcelo','Fabio M'],
+      '11D':['Joyce','Thainá','Cristiano'], '12D':['Lucas','Anderson','Thainá'],
+      '1E':['Alexandre','Fabio M','Santiago'], '4D':['Luiz','Fabio A','Marcelo'],
+      '4E':['Cristiano','Julio','Gabriel'], '5D':['Thainá','Lucas','Luiz'],
+      '5E':['Marcelo','Nelson','Anderson'], '6D':['Thiago','Tamara','Alexandre'],
+      '6E':['Aline','Joyce','Thiago'], '7E':['Sony','Santiago','Thiago H'],
+      '7D':['Thiago H','Cristiano','Daiane']
+    };
+    var segunda = {
+      '01A':['Anderson','Alexandre','Sony'], '01C':['Julio','Gabriel','Thiago H'],
+      'KIT1':['Aline','Daiane','Willian'], 'KIT2':['Cleber','Willian','Daiane'],
+      'KIT4':['Willian','Fabio A','Cleber'], '03E':['Nelson','Thiago H','Santiago'],
+      '04E':['Gabriel','Julio','Fabio A'], '05D':['Fabio M','Sony','Gabriel'],
+      '06D':['Joyce','Thiago','Tamara'], '07D':['Tamara','Aline','Eduardo'],
+      '07E':['Luiz','Eduardo','Luiz'], '08D':['Fabio A','Cleber','Marcelo'],
+      '11D':['Cristiano','Thainá','Joyce'], '12D':['Thainá','Nelson','Lucas'],
+      '1E':['Santiago','Fabio M','Alexandre'], '4D':['Sony','Marcelo','Thiago'],
+      '4E':['Eduardo','Anderson','Nelson'], '5D':['Lucas','Luiz','Thainá'],
+      '5E':['Marcelo','Lucas','Anderson'], '6D':['Alexandre','Tamara','Fabio M'],
+      '6E':['Thiago','Cristiano','Aline'], '7E':['Thiago H','Santiago','Cristiano'],
+      '7D':['Daiane','Joyce','Julio']
+    };
+    var schedTerca = buildSchedule(terca);
+    var schedSegunda = buildSchedule(segunda);
+    state.schedule['terca'] = schedTerca;
+    state.schedule['quinta'] = JSON.parse(JSON.stringify(schedTerca));
+    state.schedule['segunda'] = schedSegunda;
+    state.schedule['quarta'] = JSON.parse(JSON.stringify(schedSegunda));
+    state.schedule['sexta'] = JSON.parse(JSON.stringify(schedSegunda));
+  })();
+
+  var currentDay = 'segunda';
+  var counters = {f:0, p:0, s:0, fo:0};
+  var expandedFuncionarios = {};
+  var expandedPostos = {};
+  var expandedSetores = {};
+  var setorSelectorOpen = false;
+  var formacaoSuggestionOpen = false;
+
+  /* ---------- automatic save (this browser only) ---------- */
+  var STORAGE_KEY = 'rgdb_rodizio_autosave_v2';
+  function saveStateToLocalStorage(){
+    try{
+      var payload = {
+        posts: state.posts,
+        employees: state.employees,
+        setores: state.setores,
+        selectedSetorIds: state.selectedSetorIds,
+        schedule: state.schedule,
+        absentees: state.absentees,
+        formacoes: state.formacoes,
+        formacaoDismissed: state.formacaoDismissed,
+        savedAt: new Date().toISOString()
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    } catch(err){
+      /* storage indisponível (aba de preview, modo privado, etc.) — os backups manuais continuam funcionando normalmente */
+    }
+  }
+  function loadStateFromLocalStorage(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return false;
+      var data = JSON.parse(raw);
+      if(!data || typeof data !== 'object') return false;
+      if(Array.isArray(data.posts)) state.posts = data.posts;
+      if(Array.isArray(data.employees)) state.employees = data.employees;
+      if(Array.isArray(data.setores)) state.setores = data.setores;
+      if(data.selectedSetorIds) state.selectedSetorIds = data.selectedSetorIds;
+      if(data.schedule) state.schedule = data.schedule;
+      if(data.absentees) state.absentees = data.absentees;
+      if(data.formacoes) state.formacoes = data.formacoes;
+      if(data.formacaoDismissed) state.formacaoDismissed = data.formacaoDismissed;
+      DAYS.forEach(function(d){ if(!state.absentees[d.id]) state.absentees[d.id] = [null,null,null,null,null,null]; });
+      state.posts.forEach(function(p){ if(!p.criticidade) p.criticidade='verde'; if(!p.epis) p.epis=[]; });
+      state.employees.forEach(function(e){ if(!e.postIds) e.postIds=[]; });
+      return true;
+    } catch(err){
+      return false;
+    }
+  }
+
+  function uid(prefix){
+    counters[prefix] = (counters[prefix]||0) + 1;
+    return prefix + '_' + Date.now().toString(36) + counters[prefix];
+  }
+  function slotCount(day){ return day==='sabado' ? 2 : 3; }
+  function dayLabel(id){ var d=DAYS.filter(function(x){return x.id===id;})[0]; return d?d.label:id; }
+  function findPost(id){ return state.posts.filter(function(p){return p.id===id;})[0]; }
+  function findEmployee(id){ return state.employees.filter(function(e){return e.id===id;})[0]; }
+  function findSetor(id){ return state.setores.filter(function(s){return s.id===id;})[0]; }
+  function findFormacao(id){ return state.formacoes.filter(function(f){return f.id===id;})[0]; }
+  function critLabel(c){ return c==='amarelo' ? 'Amarelo' : c==='vermelho' ? 'Vermelho' : 'Verde'; }
+  function critColor(c){ return c==='amarelo' ? '#ffcc33' : c==='vermelho' ? '#ff5c5c' : '#3ddc84'; }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function resolveOccupant(val){
+    if(val==null || val==='SENIOR') return null;
+    if(typeof val==='string' && val.indexOf('FORM:')===0){
+      var f = findFormacao(val.slice(5));
+      return f ? f.traineeId : null;
+    }
+    return val;
+  }
+
+  function emptyStructureFor(day){
+    var n = slotCount(day);
+    var out = {};
+    state.posts.forEach(function(p){ out[p.id] = new Array(n).fill(null); });
+    return out;
+  }
+
+  /* ---------- rotation generation (maximum bipartite matching per column + rescue pass) ---------- */
+  function generateForDay(day){
+    var n = slotCount(day);
+    var absentSet = {};
+    (state.absentees[day]||[]).forEach(function(id){ if(id) absentSet[id]=true; });
+    var sched = {};
+    state.posts.forEach(function(p){ sched[p.id] = new Array(n).fill(null); });
+
+    var activeFormacoes = day==='sabado' ? [] : state.formacoes.filter(function(f){ return f.col < n; });
+    var lockedPostCol = {};
+    var colExcluded = [];
+    for(var i=0;i<n;i++) colExcluded.push({});
+    activeFormacoes.forEach(function(f){
+      lockedPostCol[f.postId+'_'+f.col] = f;
+      colExcluded[f.col][f.traineeId] = true;
+      colExcluded[f.col][f.trainerId] = true;
+    });
+
+    var dayAppearance = {};
+    var dayRed = {};
+    var redInCol = [];
+    for(var i2=0;i2<n;i2++) redInCol.push({});
+
+    activeFormacoes.forEach(function(f){
+      var post = findPost(f.postId);
+      dayAppearance[f.traineeId] = (dayAppearance[f.traineeId]||0)+1;
+      dayAppearance[f.trainerId] = (dayAppearance[f.trainerId]||0)+1;
+      if(post && post.criticidade==='vermelho'){
+        dayRed[f.traineeId] = (dayRed[f.traineeId]||0)+1;
+        dayRed[f.trainerId] = (dayRed[f.trainerId]||0)+1;
+        redInCol[f.col][f.traineeId] = true;
+        redInCol[f.col][f.trainerId] = true;
+      }
+    });
+
+    for(var col=0; col<n; col++){
+      var postsToFill = state.posts.filter(function(p){ return !lockedPostCol[p.id+'_'+col]; });
+
+      (function(col, postsToFill){
+        function isBlocked(e, post){
+          if(e.postIds.indexOf(post.id)===-1) return true;
+          if(absentSet[e.id]) return true;
+          if(colExcluded[col][e.id]) return true;
+          if(e.restritoVerde && post.criticidade!=='verde') return true;
+          var prevOccupant = col>0 ? resolveOccupant(sched[post.id][col-1]) : null;
+          if(prevOccupant===e.id) return true;
+          if(post.criticidade==='vermelho' && col>0 && redInCol[col-1][e.id]) return true;
+          return false;
+        }
+        function candidatesFor(post){
+          return state.employees.filter(function(e){ return !isBlocked(e, post); }).sort(function(a,b){
+            var au=dayAppearance[a.id]||0, bu=dayAppearance[b.id]||0;
+            if(au!==bu) return au-bu;
+            if(post.criticidade==='vermelho'){
+              var ar=dayRed[a.id]||0, br=dayRed[b.id]||0;
+              if(ar!==br) return ar-br;
+            }
+            return Math.random()-0.5;
+          });
+        }
+
+        var matchPost = {}, matchEmp = {};
+        function tryAssign(post, visited){
+          var cands = candidatesFor(post);
+          for(var i=0;i<cands.length;i++){
+            var e = cands[i];
+            if(visited[e.id]) continue;
+            visited[e.id] = true;
+            if(!matchEmp[e.id] || tryAssign(findPost(matchEmp[e.id]), visited)){
+              matchEmp[e.id] = post.id;
+              matchPost[post.id] = e.id;
+              return true;
+            }
+          }
+          return false;
+        }
+
+        var orderedPosts = postsToFill.slice().sort(function(a,b){
+          return candidatesFor(a).length - candidatesFor(b).length;
+        });
+        orderedPosts.forEach(function(post){
+          var visited = {};
+          tryAssign(post, visited);
+        });
+
+        postsToFill.forEach(function(post){
+          var empId = matchPost[post.id];
+          if(empId){
+            sched[post.id][col] = empId;
+            dayAppearance[empId] = (dayAppearance[empId]||0)+1;
+            if(post.criticidade==='vermelho'){
+              dayRed[empId] = (dayRed[empId]||0)+1;
+              redInCol[col][empId] = true;
+            }
+          } else {
+            sched[post.id][col] = 'SENIOR';
+          }
+        });
+      })(col, postsToFill);
+
+      activeFormacoes.filter(function(f){ return f.col===col; }).forEach(function(f){
+        sched[f.postId][col] = 'FORM:'+f.id;
+      });
+    }
+
+    var unused = state.employees.filter(function(e){ return !dayAppearance[e.id]; });
+    var leftover = [];
+    unused.forEach(function(e){
+      var placed = false;
+      for(var col=0; col<n && !placed; col++){
+        if(colExcluded[col][e.id]) continue;
+        var shuffled = e.postIds.slice().sort(function(){ return Math.random()-0.5; });
+        for(var pi=0; pi<shuffled.length; pi++){
+          var postId = shuffled[pi];
+          var post = findPost(postId);
+          if(!post) continue;
+          if(lockedPostCol[postId+'_'+col]) continue;
+          if(e.restritoVerde && post.criticidade!=='verde') continue;
+          var prevOccupant = col>0 ? resolveOccupant(sched[postId][col-1]) : null;
+          var nextOccupant = col<n-1 ? resolveOccupant(sched[postId][col+1]) : null;
+          if(prevOccupant===e.id || nextOccupant===e.id) continue;
+          if(post.criticidade==='vermelho' && col>0 && redInCol[col-1][e.id]) continue;
+          var current = sched[postId][col];
+          if(current==='SENIOR' || current===null){
+            sched[postId][col] = e.id;
+            dayAppearance[e.id] = 1;
+            if(post.criticidade==='vermelho'){ dayRed[e.id]=(dayRed[e.id]||0)+1; redInCol[col][e.id]=true; }
+            placed = true; break;
+          } else if(typeof current==='string' && current.indexOf('FORM:')!==0){
+            var occupantId = current;
+            if((dayAppearance[occupantId]||0) > 1){
+              sched[postId][col] = e.id;
+              dayAppearance[occupantId] -= 1;
+              dayAppearance[e.id] = 1;
+              if(post.criticidade==='vermelho'){ dayRed[e.id]=(dayRed[e.id]||0)+1; redInCol[col][e.id]=true; }
+              placed = true; break;
+            }
+          }
+        }
+      }
+      if(!placed) leftover.push(e.name);
+    });
+
+    state.schedule[day] = sched;
+    return leftover;
+  }
+
+  function reapplyFormacaoLocks(day){
+    if(day==='sabado') return;
+    var sched = state.schedule[day];
+    if(!sched) return;
+    var n = slotCount(day);
+    state.formacoes.filter(function(f){ return f.col<n; }).forEach(function(f){
+      if(sched[f.postId]) sched[f.postId][f.col] = 'FORM:'+f.id;
+    });
+  }
+
+  function applyAbsence(day, empId){
+    var sched = state.schedule[day];
+    if(!sched) return;
+    var n = slotCount(day);
+    var absentSet = {};
+    (state.absentees[day]||[]).forEach(function(id){ if(id) absentSet[id]=true; });
+
+    var redInCol = [];
+    for(var i=0;i<n;i++) redInCol.push({});
+    state.posts.forEach(function(post){
+      for(var c=0;c<n;c++){
+        var occ = resolveOccupant(sched[post.id][c]);
+        if(occ && post.criticidade==='vermelho') redInCol[c][occ] = true;
+      }
+    });
+
+    for(var col=0; col<n; col++){
+      var usedThisCol = {};
+      state.posts.forEach(function(post){
+        var occ = resolveOccupant(sched[post.id][col]);
+        if(occ && occ!==empId) usedThisCol[occ]=true;
+      });
+      state.posts.forEach(function(post){
+        var val = sched[post.id][col];
+        if(typeof val==='string' && val.indexOf('FORM:')===0) return;
+        if(val===empId){
+          var prevOccupant = col>0 ? resolveOccupant(sched[post.id][col-1]) : null;
+          var nextOccupant = col<n-1 ? resolveOccupant(sched[post.id][col+1]) : null;
+          var candidates = state.employees.filter(function(e){
+            if(e.postIds.indexOf(post.id)===-1) return false;
+            if(absentSet[e.id]) return false;
+            if(usedThisCol[e.id]) return false;
+            if(e.id===prevOccupant || e.id===nextOccupant) return false;
+            if(e.id===empId) return false;
+            if(e.restritoVerde && post.criticidade!=='verde') return false;
+            if(post.criticidade==='vermelho'){
+              if(col>0 && redInCol[col-1][e.id]) return false;
+              if(col<n-1 && redInCol[col+1][e.id]) return false;
+            }
+            return true;
+          });
+          if(candidates.length){
+            var pick = candidates[Math.floor(Math.random()*candidates.length)];
+            sched[post.id][col] = pick.id;
+            usedThisCol[pick.id] = true;
+            if(post.criticidade==='vermelho') redInCol[col][pick.id]=true;
+          } else {
+            sched[post.id][col] = 'SENIOR';
+          }
+        }
+      });
+    }
+  }
+
+  /* ---------- formação lock <-> schedule sync ---------- */
+  function applyFormacaoToSchedules(f){
+    WEEKDAYS.forEach(function(day){
+      var sched = state.schedule[day];
+      if(!sched) return;
+      Object.keys(sched).forEach(function(pid){
+        if(pid===f.postId) return;
+        if(sched[pid][f.col]===f.traineeId || sched[pid][f.col]===f.trainerId){
+          sched[pid][f.col] = null;
+        }
+      });
+      if(sched[f.postId]) sched[f.postId][f.col] = 'FORM:'+f.id;
+    });
+  }
+  function removeFormacaoFromSchedules(f){
+    WEEKDAYS.forEach(function(day){
+      var sched = state.schedule[day];
+      if(!sched || !sched[f.postId]) return;
+      if(sched[f.postId][f.col] === 'FORM:'+f.id){
+        sched[f.postId][f.col] = null;
+      }
+    });
+  }
+  function removeFormacoesReferencing(predicate){
+    var toRemove = state.formacoes.filter(predicate);
+    toRemove.forEach(function(f){ removeFormacaoFromSchedules(f); });
+    state.formacoes = state.formacoes.filter(function(f){ return !predicate(f); });
+  }
+
+  function showToast(msg){
+    var el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(el._t);
+    el._t = setTimeout(function(){ el.classList.remove('show'); }, 2600);
+  }
+
+  function showModal(html){
+    document.getElementById('modal-content').innerHTML = html;
+    document.getElementById('modal-overlay').classList.remove('hidden');
+  }
+  function closeModal(){ document.getElementById('modal-overlay').classList.add('hidden'); }
+
+  function renderAreaTable(day, setorId){
+    var n = slotCount(day);
+    var posts = state.posts.filter(function(p){ return p.setorId===setorId; });
+    var sched = state.schedule[day];
+    var headerCols = '';
+    for(var i=0;i<n;i++) headerCols += '<th>'+(i+1)+'º</th>';
+    var rows = posts.map(function(post){
+      var cells = '';
+      for(var c=0;c<n;c++){
+        var val = sched ? sched[post.id][c] : null;
+        var cls = 'cell', text = '—';
+        if(val==='SENIOR'){ cls+=' senior'; text='⚠ Sênior (muitas ausências)'; }
+        else if(typeof val==='string' && val.indexOf('FORM:')===0){
+          var f = findFormacao(val.slice(5));
+          if(f){
+            var trainee = findEmployee(f.traineeId), trainer = findEmployee(f.trainerId);
+            cls += ' locked';
+            text = '🔒 '+(trainee?escapeHtml(trainee.name):'—')+' / '+(trainer?escapeHtml(trainer.name):'—');
+          } else { cls+=' empty'; text='—'; }
+        }
+        else if(val){ var emp=findEmployee(val); text = emp?escapeHtml(emp.name):'—'; }
+        else { cls+=' empty'; text='—'; }
+        cells += '<td class="'+cls+'" data-action="assign" data-day="'+day+'" data-post="'+post.id+'" data-col="'+c+'">'+text+'</td>';
+      }
+      return '<tr><td class="post-code" data-action="view-post" data-post="'+post.id+'"><span class="crit-dot crit-'+post.criticidade+'"></span>'+escapeHtml(post.name)+'</td>'+cells+'</tr>';
+    }).join('');
+    if(!posts.length) rows = '<tr><td colspan="'+(n+1)+'" class="empty-msg" style="padding:14px;">Nenhum posto cadastrado para este setor.</td></tr>';
+    return '<table class="rodizio"><thead><tr><th>QUA</th>'+headerCols+'</tr></thead><tbody>'+rows+'</tbody></table>';
+  }
+
+  function renderRodizioGrids(){
+    saveStateToLocalStorage();
+    var container = document.getElementById('rodizio-grids');
+    var visible = state.setores.filter(function(s){ return state.selectedSetorIds.indexOf(s.id)!==-1; });
+    if(!visible.length){
+      container.innerHTML = '<p class="empty-msg">Nenhum setor selecionado para exibição. Use "Setores exibidos" acima para marcar ao menos um.</p>';
+      return;
+    }
+    container.innerHTML = visible.map(function(setor){
+      return '<section class="area-block">'+
+        '<h3 class="area-title '+setor.factory.toLowerCase()+'">'+escapeHtml(setor.name)+' <span class="factory-badge '+setor.factory.toLowerCase()+'">'+setor.factory+'</span></h3>'+
+        renderAreaTable(currentDay, setor.id)+
+      '</section>';
+    }).join('');
+  }
+
+  function renderAusentes(){
+    saveStateToLocalStorage();
+    var container = document.getElementById('ausentes-slots');
+    var list = state.absentees[currentDay];
+    container.innerHTML = list.map(function(empId, idx){
+      if(empId){
+        var emp = findEmployee(empId);
+        return '<div class="ausente-slot filled"><span>'+(emp?escapeHtml(emp.name):'—')+'</span><button class="rm" data-action="remove-absent" data-idx="'+idx+'">✕</button></div>';
+      }
+      return '<div class="ausente-slot"><button class="add" data-action="add-absent" data-idx="'+idx+'">+ Adicionar ausente</button></div>';
+    }).join('');
+  }
+
+  function renderRodizio(){ renderRodizioGrids(); renderAusentes(); }
+
+  function renderSetorSelector(){
+    saveStateToLocalStorage();
+    var label = document.getElementById('setor-toggle-label');
+    label.textContent = 'Setores exibidos ('+state.selectedSetorIds.length+'/'+state.setores.length+')';
+    var toggleBtn = document.getElementById('setor-toggle-btn');
+    toggleBtn.classList.toggle('open', setorSelectorOpen);
+    var container = document.getElementById('setor-selector');
+    container.classList.toggle('hidden', !setorSelectorOpen);
+    if(!state.setores.length){ container.innerHTML = '<p class="empty-msg">Nenhum setor cadastrado ainda.</p>'; return; }
+    container.innerHTML = state.setores.map(function(s){
+      var checked = state.selectedSetorIds.indexOf(s.id)!==-1 ? 'checked' : '';
+      return '<label class="setor-check"><input type="checkbox" data-action="toggle-setor-visibility" data-setor="'+s.id+'" '+checked+'> '+escapeHtml(s.name)+' <span class="factory-badge '+s.factory.toLowerCase()+'">'+s.factory+'</span></label>';
+    }).join('');
+  }
+
+  function renderFuncPostosCheckboxes(){
+    saveStateToLocalStorage();
+    var container = document.getElementById('func-postos-list');
+    if(!state.setores.length){ container.innerHTML = '<p class="empty-msg">Cadastre setores e postos primeiro.</p>'; return; }
+    container.innerHTML = state.setores.map(function(setor){
+      var posts = state.posts.filter(function(p){ return p.setorId===setor.id; });
+      if(!posts.length) return '';
+      var items = posts.map(function(p){
+        return '<label class="chk"><input type="checkbox" value="'+p.id+'"> '+escapeHtml(p.name)+'</label>';
+      }).join('');
+      return '<div class="area-group"><h4>'+escapeHtml(setor.name)+'</h4>'+items+'</div>';
+    }).join('');
+  }
+
+  function renderPostoSetorOptions(){
+    saveStateToLocalStorage();
+    var sel = document.getElementById('posto-setor');
+    if(!state.setores.length){
+      sel.innerHTML = '<option value="">Cadastre um setor primeiro</option>';
+      sel.disabled = true;
+      return;
+    }
+    sel.disabled = false;
+    sel.innerHTML = state.setores.map(function(s){
+      return '<option value="'+s.id+'">'+escapeHtml(s.name)+' ('+s.factory+')</option>';
+    }).join('');
+  }
+
+  function renderSetorChipsCadastro(){
+    saveStateToLocalStorage();
+    var container = document.getElementById('setor-chips-preview');
+    if(!state.setores.length){ container.innerHTML = ''; return; }
+    container.innerHTML = '<p class="hint-small" style="margin-bottom:6px;">Setores cadastrados:</p>' +
+      state.setores.map(function(s){ return '<span class="chip">'+escapeHtml(s.name)+' · '+s.factory+'</span>'; }).join('');
+  }
+
+  function renderListaFuncionarios(){
+    saveStateToLocalStorage();
+    var searchEl = document.getElementById('search-func');
+    var q = (searchEl ? searchEl.value : '').toLowerCase();
+    var container = document.getElementById('lista-funcionarios');
+    var items = state.employees.filter(function(e){ return e.name.toLowerCase().indexOf(q)!==-1; });
+    if(!items.length){ container.innerHTML = '<p class="empty-msg">Nenhum funcionário encontrado.</p>'; return; }
+    container.innerHTML = items.map(function(e){
+      var isOpen = !!expandedFuncionarios[e.id];
+      var body = '';
+      if(isOpen){
+        var chips = e.postIds.map(function(pid){
+          var p = findPost(pid);
+          return p ? '<span class="chip">'+escapeHtml(p.name)+'<button data-action="remove-emp-post" data-emp="'+e.id+'" data-post="'+pid+'">✕</button></span>' : '';
+        }).join('');
+        var available = state.posts.filter(function(p){ return e.postIds.indexOf(p.id)===-1; });
+        var options = available.map(function(p){ return '<option value="'+p.id+'">'+escapeHtml(p.name)+'</option>'; }).join('');
+        body = '<div class="chips">'+(chips || '<em>Nenhum posto</em>')+'</div>'+
+          '<select data-action="add-emp-post" data-emp="'+e.id+'"><option value="">+ adicionar posto...</option>'+options+'</select>';
+      }
+      return '<div class="list-item '+(isOpen?'open':'')+'">'+
+        '<div class="list-item-head">'+
+          '<strong>'+escapeHtml(e.name)+'</strong>'+
+          (e.restritoVerde ? '<span class="crit-badge crit-verde">🟢 Só verde</span>' : '')+
+          '<span class="mini-count">'+e.postIds.length+' posto'+(e.postIds.length===1?'':'s')+'</span>'+
+          '<button class="restrict-toggle'+(e.restritoVerde?' active':'')+'" data-action="toggle-restricao" data-emp="'+e.id+'" title="Quando ativado, o funcionário só é escalado em postos verdes">Restrito</button>'+
+          '<button class="icon-edit" data-action="toggle-func" data-emp="'+e.id+'">'+(isOpen?'✕ Fechar':'✏️ Editar')+'</button>'+
+          '<button class="del" data-action="delete-emp" data-emp="'+e.id+'">Excluir</button>'+
+        '</div>'+
+        body+
+      '</div>';
+    }).join('');
+  }
+
+  function renderListaPostos(){
+    saveStateToLocalStorage();
+    var searchEl = document.getElementById('search-posto');
+    var q = (searchEl ? searchEl.value : '').toLowerCase();
+    var container = document.getElementById('lista-postos');
+    var items = state.posts.filter(function(p){ return p.name.toLowerCase().indexOf(q)!==-1; });
+    if(!items.length){ container.innerHTML = '<p class="empty-msg">Nenhum posto encontrado.</p>'; return; }
+    container.innerHTML = items.map(function(p){
+      var isOpen = !!expandedPostos[p.id];
+      var setor = findSetor(p.setorId);
+      var body = '';
+      if(isOpen){
+        var chips = p.epis.map(function(epi){
+          return '<span class="chip">'+escapeHtml(epi)+'<button data-action="remove-post-epi" data-post="'+p.id+'" data-epi="'+escapeHtml(epi)+'">✕</button></span>';
+        }).join('');
+        var availableEpi = EPI_OPTIONS.filter(function(o){ return p.epis.indexOf(o)===-1; });
+        var epiOptions = availableEpi.map(function(o){ return '<option value="'+o+'">'+o+'</option>'; }).join('');
+        var setorOptions = state.setores.map(function(s){
+          return '<option value="'+s.id+'" '+(s.id===p.setorId?'selected':'')+'>'+escapeHtml(s.name)+' ('+s.factory+')</option>';
+        }).join('');
+        body =
+          '<label class="field-label" style="margin-top:0;">Setor</label>'+
+          '<select data-action="change-post-setor" data-post="'+p.id+'">'+setorOptions+'</select>'+
+          '<label class="field-label">Classificação</label>'+
+          '<select data-action="change-post-criticidade" data-post="'+p.id+'">'+
+            '<option value="verde" '+(p.criticidade==='verde'?'selected':'')+'>🟢 Verde</option>'+
+            '<option value="amarelo" '+(p.criticidade==='amarelo'?'selected':'')+'>🟡 Amarelo</option>'+
+            '<option value="vermelho" '+(p.criticidade==='vermelho'?'selected':'')+'>🔴 Vermelho</option>'+
+          '</select>'+
+          '<label class="field-label">EPIs</label>'+
+          '<div class="chips">'+(chips || '<em>Nenhum EPI definido</em>')+'</div>'+
+          '<select data-action="add-post-epi" data-post="'+p.id+'"><option value="">+ adicionar EPI...</option>'+epiOptions+'</select>';
+      }
+      return '<div class="list-item '+(isOpen?'open':'')+'">'+
+        '<div class="list-item-head">'+
+          '<span class="crit-dot crit-'+p.criticidade+'"></span>'+
+          '<strong>'+escapeHtml(p.name)+'</strong>'+
+          '<span class="setor-badge">'+(setor?escapeHtml(setor.name):'—')+'</span>'+
+          '<button class="icon-edit" data-action="toggle-posto" data-post="'+p.id+'">'+(isOpen?'✕ Fechar':'✏️ Editar')+'</button>'+
+          '<button class="del" data-action="delete-post" data-post="'+p.id+'">Excluir</button>'+
+        '</div>'+
+        body+
+      '</div>';
+    }).join('');
+  }
+
+  function renderListaSetores(){
+    saveStateToLocalStorage();
+    var searchEl = document.getElementById('search-setor');
+    var q = (searchEl ? searchEl.value : '').toLowerCase();
+    var container = document.getElementById('lista-setores');
+    var items = state.setores.filter(function(s){ return s.name.toLowerCase().indexOf(q)!==-1; });
+    if(!items.length){ container.innerHTML = '<p class="empty-msg">Nenhum setor encontrado.</p>'; return; }
+    container.innerHTML = items.map(function(s){
+      var isOpen = !!expandedSetores[s.id];
+      var posts = state.posts.filter(function(p){ return p.setorId===s.id; });
+      var body = '';
+      if(isOpen){
+        var chips = posts.map(function(p){
+          var otherOptions = state.setores.filter(function(o){ return o.id!==s.id; }).map(function(o){
+            return '<option value="'+o.id+'">'+escapeHtml(o.name)+'</option>';
+          }).join('');
+          var moveSelect = otherOptions ? ' <select class="mini-select" data-action="move-post-setor" data-post="'+p.id+'"><option value="">mover para...</option>'+otherOptions+'</select>' : '';
+          return '<span class="chip">'+escapeHtml(p.name)+moveSelect+'</span>';
+        }).join('') || '<em>Nenhum posto neste setor</em>';
+        body = '<p class="hint-small" style="margin:0 0 8px;">Postos neste setor:</p><div class="chips">'+chips+'</div>';
+      }
+      return '<div class="list-item '+(isOpen?'open':'')+'">'+
+        '<div class="list-item-head">'+
+          '<strong>'+escapeHtml(s.name)+'</strong>'+
+          '<span class="factory-badge '+s.factory.toLowerCase()+'">'+s.factory+'</span>'+
+          '<span class="mini-count">'+posts.length+' posto'+(posts.length===1?'':'s')+'</span>'+
+          '<button class="icon-edit" data-action="toggle-setor" data-setor="'+s.id+'">'+(isOpen?'✕ Fechar':'👁️ Ver postos')+'</button>'+
+          '<button class="del" data-action="delete-setor" data-setor="'+s.id+'">Excluir</button>'+
+        '</div>'+
+        body+
+      '</div>';
+    }).join('');
+  }
+
+  function renderListas(){ renderListaFuncionarios(); renderListaPostos(); renderListaSetores(); }
+
+  function renderAllSetorDependent(){
+    renderPostoSetorOptions();
+    renderSetorChipsCadastro();
+    renderSetorSelector();
+    renderFuncPostosCheckboxes();
+    renderListas();
+    renderRodizioGrids();
+    renderFormacaoSelects();
+    renderFormacaoSuggestions();
+  }
+
+  /* ---------- formação: suggestions, selects, list ---------- */
+  function critCounts(e){
+    var c = {verde:0, amarelo:0, vermelho:0};
+    e.postIds.forEach(function(pid){ var p=findPost(pid); if(p) c[p.criticidade] = (c[p.criticidade]||0)+1; });
+    return c;
+  }
+  function reasonFor(e, post){
+    var c = critCounts(e);
+    var reasons = [];
+    if(e.postIds.length < 3) reasons.push('tem apenas '+e.postIds.length+' posto(s) — mínimo recomendado é 3');
+    if(post.criticidade==='verde' && c.amarelo>=2 && !c.verde) reasons.push('tem vários postos amarelos e nenhum verde — ajuda a equilibrar a carga');
+    if(post.criticidade==='vermelho' && !c.vermelho) reasons.push('ainda não tem posto vermelho — ajuda a distribuir os postos mais pesados entre mais pessoas');
+    if(!reasons.length) reasons.push('boa opção para diversificar o quadro deste posto');
+    return reasons.join('; ');
+  }
+  function scoreCandidate(e, post){
+    var c = critCounts(e);
+    var score = 0;
+    score += Math.max(0, 3 - e.postIds.length) * 2;
+    if(post.criticidade==='vermelho'){ score += c.vermelho ? -3 : 4; }
+    if(post.criticidade==='verde' && c.amarelo>=2 && !c.verde){ score += 4; }
+    return score;
+  }
+  function suggestionKey(employeeId, postId){ return employeeId+'::'+postId; }
+  function computeFormacaoSuggestions(){
+    var suggestions = [];
+    var suggestedEmployeeIds = {};
+    state.posts.forEach(function(post){
+      var effectiveQualified = state.employees.filter(function(e){
+        if(e.postIds.indexOf(post.id)===-1) return false;
+        if(e.restritoVerde && post.criticidade!=='verde') return false;
+        return true;
+      });
+      if(effectiveQualified.length < 6){
+        var need = 6 - effectiveQualified.length;
+        var candidates = state.employees.filter(function(e){
+          if(e.postIds.indexOf(post.id)!==-1) return false;
+          if(e.restritoVerde && post.criticidade!=='verde') return false;
+          return true;
+        });
+        candidates.forEach(function(e){ e._score = scoreCandidate(e, post); });
+        candidates.sort(function(a,b){ return b._score - a._score; });
+        candidates.slice(0, need).forEach(function(e){
+          suggestions.push({post:post, employee:e, reason: reasonFor(e, post)});
+          suggestedEmployeeIds[e.id] = true;
+        });
+      }
+    });
+    state.employees.filter(function(e){ return e.postIds.length<3 && !suggestedEmployeeIds[e.id]; }).forEach(function(e){
+      var notKnown = state.posts.filter(function(p){ return e.postIds.indexOf(p.id)===-1; });
+      if(e.restritoVerde) notKnown = notKnown.filter(function(p){ return p.criticidade==='verde'; });
+      var target = notKnown.filter(function(p){ return p.criticidade==='verde'; })[0] || notKnown[0];
+      if(target){
+        suggestions.push({post:target, employee:e, reason:'tem apenas '+e.postIds.length+' posto(s) — precisa de pelo menos 3'});
+      }
+    });
+    var dismissedSet = {};
+    (state.formacaoDismissed||[]).forEach(function(k){ dismissedSet[k]=true; });
+    suggestions = suggestions.filter(function(s){ return !dismissedSet[suggestionKey(s.employee.id, s.post.id)]; });
+    suggestions.sort(function(a,b){
+      var aPosts=a.employee.postIds.length, bPosts=b.employee.postIds.length;
+      if(aPosts!==bPosts) return aPosts-bPosts;
+      var aRed=critCounts(a.employee).vermelho, bRed=critCounts(b.employee).vermelho;
+      if(aRed!==bRed) return bRed-aRed;
+      return 0;
+    });
+    return suggestions;
+  }
+  function renderFormacaoSuggestions(){
+    saveStateToLocalStorage();
+    var label = document.getElementById('formacao-toggle-label');
+    var all = computeFormacaoSuggestions();
+    var visible = all.slice(0, 6);
+    label.textContent = '💡 Sugestão de Formação ('+visible.length+(all.length>visible.length ? ' de '+all.length : '')+')';
+    var toggleBtn = document.getElementById('formacao-toggle-btn');
+    toggleBtn.classList.toggle('open', formacaoSuggestionOpen);
+    var container = document.getElementById('formacao-suggestion-content');
+    container.classList.toggle('hidden', !formacaoSuggestionOpen);
+    if(!visible.length){ container.innerHTML = '<p class="empty-msg">Nenhuma sugestão no momento.</p>'; return; }
+    container.innerHTML = visible.map(function(s){
+      var key = suggestionKey(s.employee.id, s.post.id);
+      return '<div class="formacao-item">'+
+        '<div class="formacao-item-main">'+
+          '<span class="crit-dot crit-'+s.post.criticidade+'"></span>'+
+          '<strong>'+escapeHtml(s.employee.name)+'</strong> → <span class="mono-tag">'+escapeHtml(s.post.name)+'</span>'+
+          '<div class="hint-small" style="margin:2px 0 0;">'+escapeHtml(s.reason)+'</div>'+
+        '</div>'+
+        '<button class="suggestion-close" data-action="dismiss-suggestion" data-key="'+key+'" title="Fechar sugestão (já executada)">✕</button>'+
+      '</div>';
+    }).join('');
+  }
+  function renderFormacaoSelects(){
+    saveStateToLocalStorage();
+    var aprendizSel = document.getElementById('formacao-aprendiz');
+    var postoSel = document.getElementById('formacao-posto');
+    var instrutorSel = document.getElementById('formacao-instrutor');
+    var empOptions = state.employees.map(function(e){ return '<option value="'+e.id+'">'+escapeHtml(e.name)+'</option>'; }).join('');
+    var postOptions = state.posts.map(function(p){ return '<option value="'+p.id+'">'+escapeHtml(p.name)+'</option>'; }).join('');
+    aprendizSel.innerHTML = '<option value="">Selecione...</option>'+empOptions;
+    instrutorSel.innerHTML = '<option value="">Selecione...</option>'+empOptions;
+    postoSel.innerHTML = '<option value="">Selecione...</option>'+postOptions;
+  }
+  function renderListaFormacoes(){
+    saveStateToLocalStorage();
+    var container = document.getElementById('lista-formacoes');
+    if(!state.formacoes.length){ container.innerHTML = '<p class="empty-msg">Nenhuma formação registrada.</p>'; return; }
+    function empOpts(sel){ return state.employees.map(function(e){ return '<option value="'+e.id+'" '+(e.id===sel?'selected':'')+'>'+escapeHtml(e.name)+'</option>'; }).join(''); }
+    function postOpts(sel){ return state.posts.map(function(p){ return '<option value="'+p.id+'" '+(p.id===sel?'selected':'')+'>'+escapeHtml(p.name)+'</option>'; }).join(''); }
+    function turnoOpts(sel){ return [0,1,2].map(function(c){ return '<option value="'+c+'" '+(c===sel?'selected':'')+'>'+(c+1)+'º</option>'; }).join(''); }
+    container.innerHTML = state.formacoes.map(function(f){
+      var trainee = findEmployee(f.traineeId), trainer = findEmployee(f.trainerId), post = findPost(f.postId);
+      return '<div class="list-item">'+
+        '<div class="list-item-head">'+
+          '<strong>'+(trainee?escapeHtml(trainee.name):'—')+' / '+(trainer?escapeHtml(trainer.name):'—')+'</strong>'+
+          '<span class="setor-badge">'+(post?escapeHtml(post.name):'—')+'</span>'+
+          '<span class="mini-count">'+(f.col+1)+'º turno</span>'+
+          '<button class="del" data-action="delete-formacao" data-formacao="'+f.id+'">Excluir</button>'+
+        '</div>'+
+        '<div class="formacao-edit-grid">'+
+          '<label>Aprendiz<select data-action="edit-formacao" data-field="traineeId" data-formacao="'+f.id+'">'+empOpts(f.traineeId)+'</select></label>'+
+          '<label>Posto<select data-action="edit-formacao" data-field="postId" data-formacao="'+f.id+'">'+postOpts(f.postId)+'</select></label>'+
+          '<label>Turno<select data-action="edit-formacao" data-field="col" data-formacao="'+f.id+'">'+turnoOpts(f.col)+'</select></label>'+
+          '<label>Instrutor<select data-action="edit-formacao" data-field="trainerId" data-formacao="'+f.id+'">'+empOpts(f.trainerId)+'</select></label>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+  }
+
+  function openQualifiedModal(postId){
+    var post = findPost(postId);
+    if(!post) return;
+    var setor = findSetor(post.setorId);
+    var rows = state.employees.map(function(e){
+      var checked = e.postIds.indexOf(postId)!==-1 ? 'checked' : '';
+      return '<label class="modal-row"><input type="checkbox" data-action="toggle-qualif" data-emp="'+e.id+'" data-post="'+postId+'" '+checked+' style="margin-right:4px;"> '+escapeHtml(e.name)+'</label>';
+    }).join('');
+    showModal(
+      '<span class="modal-close" data-action="close">✕</span>'+
+      '<h3>'+escapeHtml(post.name)+' <span class="setor-badge">'+(setor?escapeHtml(setor.name):'—')+'</span> <span class="factory-badge '+(setor?setor.factory.toLowerCase():'')+'">'+(setor?setor.factory:'')+'</span> <span class="crit-badge crit-'+post.criticidade+'">'+critLabel(post.criticidade)+'</span></h3>'+
+      '<p class="modal-hint">Funcionários aptos para este posto (marque ou desmarque para atualizar):</p>'+
+      '<div class="modal-list">'+rows+'</div>'
+    );
+  }
+
+  function openAssignModal(day, postId, col){
+    var post = findPost(postId);
+    if(!post) return;
+    var n = slotCount(day);
+    if(!state.schedule[day]) state.schedule[day] = emptyStructureFor(day);
+    var sched = state.schedule[day];
+    var absentSet = {};
+    (state.absentees[day]||[]).forEach(function(id){ if(id) absentSet[id]=true; });
+    var usedThisCol = {};
+    state.posts.forEach(function(p){
+      var occ = resolveOccupant(sched[p.id][col]);
+      if(occ) usedThisCol[occ] = true;
+    });
+    var currentVal = sched[postId][col];
+    var prevOccupant = col>0 ? resolveOccupant(sched[postId][col-1]) : null;
+    var nextOccupant = col<n-1 ? resolveOccupant(sched[postId][col+1]) : null;
+    var qualified = state.employees.filter(function(e){ return e.postIds.indexOf(postId)!==-1; });
+
+    var rows = qualified.map(function(e){
+      var status = 'Disponível', blocked = false;
+      if(e.id===currentVal){ status = 'Atual neste posto'; }
+      else if(absentSet[e.id]){ status = 'Ausente hoje'; blocked = true; }
+      else if(e.restritoVerde && post.criticidade!=='verde'){ status = 'Restrito a postos verdes'; blocked = true; }
+      else if(usedThisCol[e.id]){ status = 'Em outro posto neste turno'; blocked = true; }
+      else if(e.id===prevOccupant || e.id===nextOccupant){ status = 'Mesmo posto em turno adjacente'; blocked = true; }
+      var btn = blocked ? '' : '<button data-action="pick-assign" data-day="'+day+'" data-post="'+postId+'" data-col="'+col+'" data-emp="'+e.id+'">Selecionar</button>';
+      return '<div class="modal-row assign-row"><span>'+escapeHtml(e.name)+'</span><span class="status '+(blocked?'blocked':'ok')+'">'+status+'</span>'+btn+'</div>';
+    }).join('') || '<p class="modal-hint">Nenhum funcionário cadastrado para este posto ainda.</p>';
+
+    showModal(
+      '<span class="modal-close" data-action="close">✕</span>'+
+      '<h3>'+escapeHtml(post.name)+' · '+(col+1)+'º turno</h3>'+
+      '<p class="modal-hint">Selecione quem assume este posto:</p>'+
+      '<div class="modal-list">'+rows+'</div>'+
+      '<div class="modal-footer-actions">'+
+        '<button class="btn ghost" data-action="mark-senior" data-day="'+day+'" data-post="'+postId+'" data-col="'+col+'">Marcar Sênior</button>'+
+        '<button class="btn ghost" data-action="clear-cell" data-day="'+day+'" data-post="'+postId+'" data-col="'+col+'">Limpar</button>'+
+      '</div>'
+    );
+  }
+
+  function openAbsentModal(idx){
+    var alreadyAbsent = {};
+    state.absentees[currentDay].forEach(function(id){ if(id) alreadyAbsent[id]=true; });
+    var rows = state.employees.map(function(e){
+      var already = alreadyAbsent[e.id];
+      var right = already ? '<span class="status blocked">Já marcado ausente</span>' : '<button data-action="pick-absent" data-idx="'+idx+'" data-emp="'+e.id+'">Marcar ausente</button>';
+      return '<div class="modal-row assign-row" data-name="'+escapeHtml(e.name.toLowerCase())+'"><span>'+escapeHtml(e.name)+'</span>'+right+'</div>';
+    }).join('');
+    showModal(
+      '<span class="modal-close" data-action="close">✕</span>'+
+      '<h3>Marcar ausência</h3>'+
+      '<input type="text" id="modal-search-absent" class="modal-search" placeholder="Buscar funcionário...">'+
+      '<div class="modal-list" id="modal-absent-list">'+rows+'</div>'
+    );
+    document.getElementById('modal-search-absent').addEventListener('input', function(e){
+      var q = e.target.value.toLowerCase();
+      document.querySelectorAll('#modal-absent-list .assign-row').forEach(function(row){
+        row.style.display = row.getAttribute('data-name').indexOf(q)!==-1 ? '' : 'none';
+      });
+    });
+  }
+
+  function openSaveModal(){
+    if(!state.schedule[currentDay]){ showToast('Gere o rodízio antes de copiar.'); return; }
+    var rows = DAYS.map(function(d){
+      return '<button class="btn ghost" data-action="pick-save-day" data-day="'+d.id+'">'+d.label+'</button>';
+    }).join('');
+    showModal(
+      '<span class="modal-close" data-action="close">✕</span>'+
+      '<h3>Copiar Rodízio</h3>'+
+      '<p class="modal-hint">Copiar o rodízio de '+dayLabel(currentDay)+' para qual dia da semana?</p>'+
+      '<div class="save-days">'+rows+'</div>'
+    );
+  }
+
+  function showLeftoverWarning(day, leftover){
+    showModal(
+      '<span class="modal-close" data-action="close">✕</span>'+
+      '<h3>⚠ Atenção</h3>'+
+      '<p class="modal-hint">Não foi possível encaixar '+(leftover.length>1?'os seguintes funcionários':'o seguinte funcionário')+' no rodízio de '+dayLabel(day)+':</p>'+
+      '<div class="modal-list">'+leftover.map(function(n){ return '<div class="modal-row"><span>'+escapeHtml(n)+'</span></div>'; }).join('')+'</div>'+
+      '<p class="hint-small">Costuma acontecer quando o funcionário tem poucos postos cadastrados ou todos os seus postos já estão ocupados/travados nesse turno. Cadastre mais postos para ele na aba Formação ou Cadastro.</p>'
+    );
+  }
+
+  /* ---------- image export ---------- */
+  var IMG_TITLE_H = 30, IMG_TITLE_GAP = 4, IMG_HEADER_H = 26, IMG_ROW_H = 28;
+
+  function truncateText(ctx, text, maxWidth){
+    if(ctx.measureText(text).width <= maxWidth) return text;
+    var t = text;
+    while(t.length>1 && ctx.measureText(t+'…').width > maxWidth){ t = t.slice(0,-1); }
+    return t+'…';
+  }
+
+  function drawSetorBlock(ctx, setor, x, y, width, sched, n){
+    var posts = state.posts.filter(function(p){ return p.setorId===setor.id; });
+    ctx.fillStyle = '#eafaf6';
+    ctx.fillRect(x, y, width, IMG_TITLE_H);
+    ctx.fillStyle = '#0b7a63';
+    ctx.font = '700 15px "Space Grotesk", sans-serif';
+    ctx.fillText(setor.name.toUpperCase()+'  ·  '+setor.factory, x+10, y+20);
+
+    var tableY = y + IMG_TITLE_H + IMG_TITLE_GAP;
+    var colPostWidth = 70;
+    var colTurnoWidth = (width - colPostWidth) / n;
+
+    ctx.fillStyle = '#eef4f8';
+    ctx.fillRect(x, tableY, width, IMG_HEADER_H);
+    ctx.fillStyle = '#33506b';
+    ctx.font = '700 11px "Space Grotesk", sans-serif';
+    ctx.fillText('QUA', x+8, tableY+17);
+    for(var c=0;c<n;c++){ ctx.fillText((c+1)+'º', x+colPostWidth + c*colTurnoWidth + 8, tableY+17); }
+
+    var rowY = tableY + IMG_HEADER_H;
+    if(!posts.length){
+      ctx.fillStyle = '#9fb0bd';
+      ctx.font = 'italic 12px "Inter", sans-serif';
+      ctx.fillText('Nenhum posto neste setor', x+8, rowY+18);
+    }
+    posts.forEach(function(post, idx){
+      if(idx % 2 === 1){ ctx.fillStyle='#f8fafb'; ctx.fillRect(x, rowY, width, IMG_ROW_H); }
+      ctx.fillStyle = critColor(post.criticidade);
+      ctx.beginPath(); ctx.arc(x+10, rowY+IMG_ROW_H/2, 4, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#0d3b66';
+      ctx.font = '700 12px "JetBrains Mono", monospace';
+      ctx.fillText(post.name, x+20, rowY+19);
+      for(var c=0;c<n;c++){
+        var val = sched ? sched[post.id][c] : null;
+        var cellX = x+colPostWidth + c*colTurnoWidth;
+        var text, color, font;
+        if(val==='SENIOR'){
+          ctx.fillStyle='#ffcc33';
+          ctx.fillRect(cellX+2, rowY+2, colTurnoWidth-4, IMG_ROW_H-4);
+          text='Sênior'; color='#5c4200'; font='700 11px "Inter", sans-serif';
+        } else if(typeof val==='string' && val.indexOf('FORM:')===0){
+          var f = findFormacao(val.slice(5));
+          ctx.fillStyle='#e7edff';
+          ctx.fillRect(cellX+2, rowY+2, colTurnoWidth-4, IMG_ROW_H-4);
+          if(f){
+            var trainee = findEmployee(f.traineeId), trainer = findEmployee(f.trainerId);
+            text = (trainee?trainee.name:'?')+'/'+(trainer?trainer.name:'?');
+          } else { text='Formação'; }
+          color='#1c4fb0'; font='700 10px "Inter", sans-serif';
+        } else if(val){
+          var emp = findEmployee(val);
+          text = emp ? emp.name : '—'; color='#0d1526'; font='500 12px "Inter", sans-serif';
+        } else {
+          text='—'; color='#9fb0bd'; font='italic 12px "Inter", sans-serif';
+        }
+        ctx.fillStyle = color;
+        ctx.font = font;
+        ctx.fillText(truncateText(ctx, text, colTurnoWidth-12), cellX+8, rowY+19);
+      }
+      rowY += IMG_ROW_H;
+    });
+    ctx.strokeStyle = '#e3eaf0';
+    ctx.strokeRect(x+0.5, y+0.5, width, (rowY - y));
+  }
+
+  function buildRodizioImage(){
+    var day = currentDay;
+    var visible = state.setores.filter(function(s){ return state.selectedSetorIds.indexOf(s.id)!==-1; });
+    if(!visible.length){ showToast('Selecione ao menos um setor para exportar.'); return null; }
+    var n = slotCount(day);
+    var sched = state.schedule[day];
+
+    var margin = 40, colGap = 28, colWidth = 400;
+    var cols = Math.min(visible.length, 3);
+    var canvasWidth = margin*2 + cols*colWidth + (cols-1)*colGap;
+
+    var setorRows = [];
+    for(var i=0;i<visible.length;i+=cols){ setorRows.push(visible.slice(i,i+cols)); }
+
+    var headerHeight = 110, blockGapY = 24, footerHeight = 50;
+    var rowsHeights = setorRows.map(function(rowSetores){
+      var maxRows = 0;
+      rowSetores.forEach(function(s){
+        var count = state.posts.filter(function(p){ return p.setorId===s.id; }).length;
+        if(count>maxRows) maxRows=count;
+      });
+      return IMG_TITLE_H + IMG_TITLE_GAP + IMG_HEADER_H + Math.max(maxRows,1)*IMG_ROW_H;
+    });
+    var totalRowsHeight = rowsHeights.reduce(function(a,b){return a+b;},0) + Math.max(setorRows.length-1,0)*blockGapY;
+    var canvasHeight = headerHeight + totalRowsHeight + footerHeight;
+
+    var canvas = document.createElement('canvas');
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+    var ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0,0,canvasWidth,canvasHeight);
+
+    var grad = ctx.createLinearGradient(0,0,canvasWidth,0);
+    grad.addColorStop(0,'#17c1a0'); grad.addColorStop(.5,'#2f6fed'); grad.addColorStop(1,'#3ddc84');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,canvasWidth,10);
+
+    var logoImg = document.querySelector('.logo');
+    var lh=40, lw=90;
+    if(logoImg && logoImg.naturalWidth && logoImg.naturalHeight){ lw = (logoImg.naturalWidth/logoImg.naturalHeight)*lh; }
+    try{ ctx.drawImage(logoImg, margin, 28, lw, lh); }catch(err){}
+
+    ctx.fillStyle = '#0d1526';
+    ctx.font = '700 26px "Space Grotesk", sans-serif';
+    ctx.fillText('Rodízio · '+dayLabel(day), margin + lw + 20, 52);
+    ctx.font = '500 14px "Inter", sans-serif';
+    ctx.fillStyle = '#5b7185';
+    var now = new Date();
+    var whenStr = 'Gerado em '+now.toLocaleDateString('pt-BR')+' às '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    ctx.fillText(whenStr, margin + lw + 20, 74);
+
+    var y = headerHeight;
+    setorRows.forEach(function(rowSetores, rowIdx){
+      var x = margin;
+      rowSetores.forEach(function(setor){
+        drawSetorBlock(ctx, setor, x, y, colWidth, sched, n);
+        x += colWidth + colGap;
+      });
+      y += rowsHeights[rowIdx] + blockGapY;
+    });
+
+    ctx.fillStyle = '#9fb0bd';
+    ctx.font = '500 12px "Inter", sans-serif';
+    ctx.fillText('Sistema de Rodízio · RGdB', margin, canvasHeight-18);
+
+    return canvas;
+  }
+
+  function exportRodizioImage(){
+    var canvas = buildRodizioImage();
+    if(!canvas) return;
+    canvas.toBlob(function(blob){
+      if(!blob){ showToast('Não foi possível gerar a imagem.'); return; }
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      var now = new Date();
+      function pad(n){ return String(n).padStart(2,'0'); }
+      a.href = url;
+      a.download = 'rodizio_'+currentDay+'_'+now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+'.png';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Imagem exportada! Pronta para enviar no WhatsApp.');
+    }, 'image/png');
+  }
+
+  /* ---------- backup ---------- */
+  function slugify(name){
+    return String(name).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/(^-+|-+$)/g,'').toLowerCase();
+  }
+  function triggerJsonDownload(payload, prefix, label){
+    var json = JSON.stringify(payload, null, 2);
+    var blob = new Blob([json], {type:'application/json'});
+    var url = URL.createObjectURL(blob);
+    var now = new Date();
+    function pad(n){ return String(n).padStart(2,'0'); }
+    var datePart = now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+'_'+pad(now.getHours())+'h'+pad(now.getMinutes());
+    var namePart = label ? '_'+slugify(label) : '';
+    var filename = prefix+namePart+'_'+datePart+'.json';
+    var a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    return filename;
+  }
+  function downloadBackupRodizio(label){
+    var payload = {
+      type: 'rodizio-backup',
+      label: label || '',
+      schedule: state.schedule,
+      absentees: state.absentees,
+      formacoes: state.formacoes,
+      formacaoDismissed: state.formacaoDismissed,
+      selectedSetorIds: state.selectedSetorIds,
+      exportedAt: new Date().toISOString()
+    };
+    var filename = triggerJsonDownload(payload, 'backup-rodizio', label);
+    showToast('Backup do rodízio salvo: '+filename);
+  }
+  function downloadBackupCadastro(label){
+    var payload = {
+      type: 'cadastro-backup',
+      label: label || '',
+      posts: state.posts,
+      employees: state.employees,
+      setores: state.setores,
+      exportedAt: new Date().toISOString()
+    };
+    var filename = triggerJsonDownload(payload, 'backup-cadastro', label);
+    showToast('Backup de cadastro salvo: '+filename);
+  }
+  function downloadBackupCompleto(label){
+    var payload = {
+      type: 'completo-backup',
+      label: label || '',
+      posts: state.posts,
+      employees: state.employees,
+      setores: state.setores,
+      selectedSetorIds: state.selectedSetorIds,
+      schedule: state.schedule,
+      absentees: state.absentees,
+      formacoes: state.formacoes,
+      formacaoDismissed: state.formacaoDismissed,
+      exportedAt: new Date().toISOString()
+    };
+    var filename = triggerJsonDownload(payload, 'backup-completo', label);
+    showToast('Backup completo salvo: '+filename);
+  }
+  function openBackupNameModal(scope){
+    var titles = {completo:'Backup Completo', rodizio:'Backup do Rodízio', cadastro:'Backup de Postos e Funcionários'};
+    showModal(
+      '<span class="modal-close" data-action="close">✕</span>'+
+      '<h3>Nomear backup</h3>'+
+      '<p class="modal-hint">Dê um nome para identificar este backup ('+titles[scope]+').</p>'+
+      '<input type="text" id="backup-name-input" class="modal-search" placeholder="Ex: Antes das férias, Segunda 29/07" style="margin-bottom:14px;">'+
+      '<button class="btn" data-action="confirm-backup-name" data-scope="'+scope+'">Salvar backup</button>'
+    );
+    var input = document.getElementById('backup-name-input');
+    if(input){
+      input.focus();
+      input.addEventListener('keydown', function(ev){
+        if(ev.key==='Enter'){
+          var btn = document.querySelector('[data-action="confirm-backup-name"]');
+          if(btn) btn.click();
+        }
+      });
+    }
+  }
+  function handleCompletoImport(file){
+    var reader = new FileReader();
+    reader.onload = function(ev){
+      try{
+        var data = JSON.parse(ev.target.result);
+        if(!data || typeof data !== 'object') throw new Error('invalid');
+        var touched = [];
+        if(Array.isArray(data.posts)){
+          state.posts = data.posts;
+          state.posts.forEach(function(p){ if(!p.criticidade) p.criticidade='verde'; if(!p.epis) p.epis=[]; });
+          touched.push('postos');
+        }
+        if(Array.isArray(data.employees)){
+          state.employees = data.employees;
+          state.employees.forEach(function(e){ if(!e.postIds) e.postIds=[]; });
+          touched.push('funcionários');
+        }
+        if(Array.isArray(data.setores)){ state.setores = data.setores; touched.push('setores'); }
+        if(data.selectedSetorIds) state.selectedSetorIds = data.selectedSetorIds;
+        if(data.schedule){ state.schedule = data.schedule; touched.push('rodízio'); }
+        if(data.absentees){
+          state.absentees = data.absentees;
+          DAYS.forEach(function(d){ if(!state.absentees[d.id]) state.absentees[d.id] = [null,null,null,null,null,null]; });
+          touched.push('ausências');
+        }
+        if(data.formacoes){ state.formacoes = data.formacoes; touched.push('formações'); }
+        if(data.formacaoDismissed) state.formacaoDismissed = data.formacaoDismissed;
+        if(!touched.length){ showToast('Arquivo de backup vazio ou inválido.'); return; }
+        expandedFuncionarios = {}; expandedPostos = {}; expandedSetores = {};
+        renderAllSetorDependent();
+        renderAusentes();
+        renderListaFormacoes();
+        showToast('Backup importado: '+touched.join(', ')+'.');
+      } catch(err){
+        showToast('Arquivo de backup inválido.');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function switchPage(page){
+    document.querySelectorAll('.main-tabs button').forEach(function(b){ b.classList.toggle('active', b.dataset.page===page); });
+    document.querySelectorAll('.page').forEach(function(p){ p.classList.toggle('active', p.id==='page-'+page); });
+  }
+  function switchDay(day){
+    currentDay = day;
+    document.querySelectorAll('.day-tabs button').forEach(function(b){ b.classList.toggle('active', b.dataset.day===day); });
+    renderRodizio();
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    loadStateFromLocalStorage();
+    renderFuncPostosCheckboxes();
+    renderPostoSetorOptions();
+    renderSetorChipsCadastro();
+    renderSetorSelector();
+    renderListas();
+    renderFormacaoSelects();
+    renderFormacaoSuggestions();
+    renderListaFormacoes();
+    switchDay('segunda');
+    setInterval(saveStateToLocalStorage, 15000);
+    window.addEventListener('beforeunload', saveStateToLocalStorage);
+
+    document.querySelectorAll('.main-tabs button').forEach(function(btn){
+      btn.addEventListener('click', function(){ switchPage(btn.dataset.page); });
+    });
+    document.querySelectorAll('.day-tabs button').forEach(function(btn){
+      btn.addEventListener('click', function(){ switchDay(btn.dataset.day); });
+    });
+
+    document.getElementById('btn-gerar').addEventListener('click', function(){
+      var leftover = generateForDay(currentDay);
+      renderRodizioGrids();
+      if(leftover && leftover.length){
+        showLeftoverWarning(currentDay, leftover);
+      } else {
+        showToast('Rodízio gerado para '+dayLabel(currentDay));
+      }
+    });
+    document.getElementById('btn-copiar').addEventListener('click', openSaveModal);
+    document.getElementById('btn-limpar').addEventListener('click', function(){
+      if(!confirm('Limpar todo o rodízio de '+dayLabel(currentDay)+'? Essa ação não pode ser desfeita.')) return;
+      state.schedule[currentDay] = emptyStructureFor(currentDay);
+      reapplyFormacaoLocks(currentDay);
+      renderRodizioGrids();
+      showToast('Rodízio de '+dayLabel(currentDay)+' foi limpo.');
+    });
+    document.getElementById('btn-exportar').addEventListener('click', function(){
+      function run(){ exportRodizioImage(); }
+      if(document.fonts && document.fonts.ready){ document.fonts.ready.then(run); } else { run(); }
+    });
+    document.getElementById('btn-backup-save').addEventListener('click', function(){ openBackupNameModal('rodizio'); });
+    document.getElementById('btn-backup-import').addEventListener('click', function(){
+      document.getElementById('input-backup-import').click();
+    });
+    document.getElementById('btn-backup-cadastro-save').addEventListener('click', function(){ openBackupNameModal('cadastro'); });
+    document.getElementById('btn-backup-cadastro-import').addEventListener('click', function(){
+      document.getElementById('input-backup-cadastro-import').click();
+    });
+    document.getElementById('btn-backup-completo-save').addEventListener('click', function(){ openBackupNameModal('completo'); });
+    document.getElementById('btn-backup-completo-import').addEventListener('click', function(){
+      document.getElementById('input-backup-completo-import').click();
+    });
+    document.getElementById('input-backup-completo-import').addEventListener('change', function(e){
+      var file = e.target.files[0];
+      if(!file) return;
+      handleCompletoImport(file);
+      e.target.value = '';
+    });
+    document.getElementById('input-backup-import').addEventListener('change', function(e){
+      var file = e.target.files[0];
+      if(!file) return;
+      var reader = new FileReader();
+      reader.onload = function(ev){
+        try{
+          var data = JSON.parse(ev.target.result);
+          var looksLikeRodizio = data && (data.schedule || data.absentees || data.formacoes);
+          var looksLikeCadastro = data && (Array.isArray(data.posts) || Array.isArray(data.employees));
+          if(!looksLikeRodizio){
+            if(looksLikeCadastro){ showToast('Este arquivo é um backup de cadastro (funcionários/postos) — importe na aba Backup.'); }
+            else { showToast('Arquivo de backup inválido.'); }
+            e.target.value = '';
+            return;
+          }
+          state.schedule = data.schedule || {};
+          state.absentees = data.absentees || {};
+          DAYS.forEach(function(d){ if(!state.absentees[d.id]) state.absentees[d.id] = [null,null,null,null,null,null]; });
+          state.formacoes = data.formacoes || [];
+          state.formacaoDismissed = data.formacaoDismissed || [];
+          if(data.selectedSetorIds) state.selectedSetorIds = data.selectedSetorIds;
+          renderRodizio();
+          renderListaFormacoes();
+          renderFormacaoSuggestions();
+          renderSetorSelector();
+          showToast('Backup do rodízio importado com sucesso.');
+        } catch(err){
+          showToast('Arquivo de backup inválido.');
+        }
+        e.target.value = '';
+      };
+      reader.readAsText(file);
+    });
+    document.getElementById('input-backup-cadastro-import').addEventListener('change', function(e){
+      var file = e.target.files[0];
+      if(!file) return;
+      var reader = new FileReader();
+      reader.onload = function(ev){
+        try{
+          var data = JSON.parse(ev.target.result);
+          var looksLikeCadastro = data && (Array.isArray(data.posts) || Array.isArray(data.employees));
+          var looksLikeRodizio = data && (data.schedule || data.absentees);
+          if(!looksLikeCadastro){
+            if(looksLikeRodizio){ showToast('Este arquivo é um backup de rodízio — importe na aba Backup.'); }
+            else { showToast('Arquivo de backup inválido.'); }
+            e.target.value = '';
+            return;
+          }
+          state.posts = data.posts || [];
+          state.employees = data.employees || [];
+          state.setores = data.setores || [];
+          state.posts.forEach(function(p){
+            if(!p.criticidade) p.criticidade = 'verde';
+            if(!p.epis) p.epis = [];
+          });
+          state.employees.forEach(function(emp){ if(!emp.postIds) emp.postIds = []; });
+          if(!state.selectedSetorIds || !state.selectedSetorIds.length){
+            state.selectedSetorIds = state.setores.map(function(s){ return s.id; });
+          }
+          expandedFuncionarios = {};
+          expandedPostos = {};
+          renderAllSetorDependent();
+          renderListaFormacoes();
+          showToast('Backup de cadastro importado com sucesso.');
+        } catch(err){
+          showToast('Arquivo de backup inválido.');
+        }
+        e.target.value = '';
+      };
+      reader.readAsText(file);
+    });
+
+    document.getElementById('setor-toggle-btn').addEventListener('click', function(){
+      setorSelectorOpen = !setorSelectorOpen;
+      renderSetorSelector();
+    });
+    document.getElementById('formacao-toggle-btn').addEventListener('click', function(){
+      formacaoSuggestionOpen = !formacaoSuggestionOpen;
+      renderFormacaoSuggestions();
+    });
+
+    document.getElementById('page-inicio').addEventListener('click', function(e){
+      var t = e.target.closest('[data-action]');
+      if(!t) return;
+      var action = t.dataset.action;
+      if(action==='view-post') openQualifiedModal(t.dataset.post);
+      else if(action==='assign'){
+        var dayA = currentDay, postA = t.dataset.post, colA = parseInt(t.dataset.col,10);
+        var curVal = state.schedule[dayA] ? state.schedule[dayA][postA][colA] : null;
+        if(typeof curVal==='string' && curVal.indexOf('FORM:')===0){
+          showToast('Esta vaga é uma Formação travada — edite ou remova na aba Formação.');
+        } else {
+          openAssignModal(dayA, postA, colA);
+        }
+      }
+      else if(action==='add-absent') openAbsentModal(parseInt(t.dataset.idx,10));
+      else if(action==='remove-absent'){ state.absentees[currentDay][parseInt(t.dataset.idx,10)] = null; renderAusentes(); }
+    });
+    document.getElementById('page-inicio').addEventListener('change', function(e){
+      var t = e.target;
+      if(t.dataset.action==='toggle-setor-visibility'){
+        var id = t.dataset.setor;
+        var idx = state.selectedSetorIds.indexOf(id);
+        if(t.checked){ if(idx===-1) state.selectedSetorIds.push(id); }
+        else { if(idx!==-1) state.selectedSetorIds.splice(idx,1); }
+        renderSetorSelector();
+        renderRodizioGrids();
+      }
+    });
+
+    document.getElementById('form-funcionario').addEventListener('submit', function(e){
+      e.preventDefault();
+      var nome = document.getElementById('func-nome').value.trim();
+      if(!nome) return;
+      var checked = Array.prototype.slice.call(document.querySelectorAll('#func-postos-list input[type=checkbox]:checked')).map(function(c){ return c.value; });
+      var restrito = document.getElementById('func-restrito').checked;
+      state.employees.push({id:uid('f'), name:nome, postIds:checked, restritoVerde:restrito});
+      e.target.reset();
+      renderFuncPostosCheckboxes();
+      renderListas();
+      renderFormacaoSelects();
+      renderFormacaoSuggestions();
+      showToast('Funcionário cadastrado: '+nome);
+    });
+
+    document.getElementById('form-posto').addEventListener('submit', function(e){
+      e.preventDefault();
+      var nome = document.getElementById('posto-nome').value.trim();
+      if(!nome) return;
+      var setorId = document.getElementById('posto-setor').value;
+      if(!setorId){ showToast('Cadastre um setor antes de criar um posto.'); return; }
+      var epis = Array.prototype.slice.call(document.querySelectorAll('input[name=posto-epi]:checked')).map(function(c){ return c.value; });
+      var critEl = document.querySelector('input[name=posto-criticidade]:checked');
+      var criticidade = critEl ? critEl.value : 'verde';
+      state.posts.push({id:uid('p'), name:nome, setorId:setorId, epis:epis, criticidade:criticidade});
+      e.target.reset();
+      document.querySelectorAll('input[name=posto-epi]').forEach(function(cb){ cb.checked = cb.value!=='Mangote'; });
+      document.querySelector('input[name=posto-criticidade][value=verde]').checked = true;
+      renderFuncPostosCheckboxes();
+      renderListaPostos();
+      renderRodizioGrids();
+      renderFormacaoSelects();
+      renderFormacaoSuggestions();
+      showToast('Posto cadastrado: '+nome);
+    });
+
+    document.getElementById('form-setor').addEventListener('submit', function(e){
+      e.preventDefault();
+      var nome = document.getElementById('setor-nome').value.trim();
+      if(!nome) return;
+      var fabEl = document.querySelector('input[name=setor-fabrica]:checked');
+      var fabrica = fabEl ? fabEl.value : 'CVP';
+      var newSetor = {id:uid('s'), name:nome, factory:fabrica};
+      state.setores.push(newSetor);
+      state.selectedSetorIds.push(newSetor.id);
+      e.target.reset();
+      document.querySelector('input[name=setor-fabrica][value=CVP]').checked = true;
+      renderAllSetorDependent();
+      showToast('Setor cadastrado: '+nome);
+    });
+
+    document.getElementById('form-formacao').addEventListener('submit', function(e){
+      e.preventDefault();
+      var traineeId = document.getElementById('formacao-aprendiz').value;
+      var postId = document.getElementById('formacao-posto').value;
+      var col = parseInt(document.getElementById('formacao-turno').value,10);
+      var trainerId = document.getElementById('formacao-instrutor').value;
+      if(!traineeId || !postId || !trainerId){ showToast('Preencha todos os campos.'); return; }
+      if(traineeId===trainerId){ showToast('O aprendiz e o instrutor devem ser diferentes.'); return; }
+      var formacaoPost = findPost(postId);
+      var formacaoTrainee = findEmployee(traineeId), formacaoTrainer = findEmployee(trainerId);
+      if(formacaoPost && formacaoPost.criticidade!=='verde'){
+        if(formacaoTrainee && formacaoTrainee.restritoVerde){ showToast(formacaoTrainee.name+' está restrito a postos verdes.'); return; }
+        if(formacaoTrainer && formacaoTrainer.restritoVerde){ showToast(formacaoTrainer.name+' está restrito a postos verdes.'); return; }
+      }
+      var f = {id:uid('fo'), traineeId:traineeId, postId:postId, col:col, trainerId:trainerId};
+      state.formacoes.push(f);
+      applyFormacaoToSchedules(f);
+      e.target.reset();
+      renderListaFormacoes();
+      renderRodizio();
+      renderFormacaoSuggestions();
+      showToast('Formação registrada.');
+    });
+
+    document.getElementById('page-formacao').addEventListener('click', function(e){
+      var t = e.target.closest('[data-action]');
+      if(!t) return;
+      if(t.dataset.action==='delete-formacao'){
+        if(!confirm('Excluir esta formação?')) return;
+        var fid = t.dataset.formacao;
+        var f = findFormacao(fid);
+        if(f) removeFormacaoFromSchedules(f);
+        state.formacoes = state.formacoes.filter(function(x){ return x.id!==fid; });
+        renderListaFormacoes();
+        renderRodizio();
+        renderFormacaoSuggestions();
+      } else if(t.dataset.action==='dismiss-suggestion'){
+        var key = t.dataset.key;
+        if(!state.formacaoDismissed) state.formacaoDismissed = [];
+        if(state.formacaoDismissed.indexOf(key)===-1) state.formacaoDismissed.push(key);
+        renderFormacaoSuggestions();
+      }
+    });
+    document.getElementById('page-formacao').addEventListener('change', function(e){
+      var t = e.target;
+      if(t.dataset.action==='edit-formacao'){
+        var fid = t.dataset.formacao;
+        var field = t.dataset.field;
+        var f = findFormacao(fid);
+        if(!f) return;
+        var oldCopy = {id:f.id, traineeId:f.traineeId, trainerId:f.trainerId, postId:f.postId, col:f.col};
+        removeFormacaoFromSchedules(oldCopy);
+        if(field==='col'){ f.col = parseInt(t.value,10); } else { f[field] = t.value; }
+        applyFormacaoToSchedules(f);
+        renderListaFormacoes();
+        renderRodizio();
+        renderFormacaoSuggestions();
+      }
+    });
+
+    document.getElementById('search-func').addEventListener('input', renderListaFuncionarios);
+    document.getElementById('search-posto').addEventListener('input', renderListaPostos);
+    document.getElementById('search-setor').addEventListener('input', renderListaSetores);
+
+    document.getElementById('page-listas').addEventListener('click', function(e){
+      var t = e.target.closest('[data-action]');
+      if(!t) return;
+      var action = t.dataset.action;
+      if(action==='toggle-func'){
+        var fid = t.dataset.emp;
+        expandedFuncionarios[fid] = !expandedFuncionarios[fid];
+        renderListaFuncionarios();
+      } else if(action==='toggle-posto'){
+        var pid0 = t.dataset.post;
+        expandedPostos[pid0] = !expandedPostos[pid0];
+        renderListaPostos();
+      } else if(action==='toggle-setor'){
+        var sid0 = t.dataset.setor;
+        expandedSetores[sid0] = !expandedSetores[sid0];
+        renderListaSetores();
+      } else if(action==='remove-emp-post'){
+        var emp = findEmployee(t.dataset.emp);
+        emp.postIds = emp.postIds.filter(function(pid){ return pid!==t.dataset.post; });
+        renderListaFuncionarios();
+        renderFormacaoSuggestions();
+      } else if(action==='toggle-restricao'){
+        var empR = findEmployee(t.dataset.emp);
+        empR.restritoVerde = !empR.restritoVerde;
+        renderListaFuncionarios();
+        renderFormacaoSuggestions();
+        showToast(empR.restritoVerde ? empR.name+' restrito a postos verdes.' : 'Restrição removida de '+empR.name+'.');
+      } else if(action==='delete-emp'){
+        if(!confirm('Excluir este funcionário?')) return;
+        var id = t.dataset.emp;
+        removeFormacoesReferencing(function(f){ return f.traineeId===id || f.trainerId===id; });
+        state.employees = state.employees.filter(function(e){ return e.id!==id; });
+        DAYS.forEach(function(d){
+          var sched = state.schedule[d.id];
+          if(sched){
+            Object.keys(sched).forEach(function(pid){
+              sched[pid] = sched[pid].map(function(v){ return v===id ? 'SENIOR' : v; });
+            });
+          }
+          state.absentees[d.id] = state.absentees[d.id].map(function(v){ return v===id ? null : v; });
+        });
+        renderListas(); renderRodizioGrids();
+        renderFormacaoSelects(); renderListaFormacoes(); renderFormacaoSuggestions();
+      } else if(action==='remove-post-epi'){
+        var post = findPost(t.dataset.post);
+        post.epis = post.epis.filter(function(ep){ return ep!==t.dataset.epi; });
+        renderListaPostos();
+      } else if(action==='delete-post'){
+        if(!confirm('Excluir este posto? Isso também removerá a qualificação dos funcionários e as atribuições no rodízio.')) return;
+        var pid2 = t.dataset.post;
+        removeFormacoesReferencing(function(f){ return f.postId===pid2; });
+        state.posts = state.posts.filter(function(p){ return p.id!==pid2; });
+        state.employees.forEach(function(e){ e.postIds = e.postIds.filter(function(x){ return x!==pid2; }); });
+        DAYS.forEach(function(d){ var sched = state.schedule[d.id]; if(sched) delete sched[pid2]; });
+        renderAllSetorDependent();
+        renderListaFormacoes();
+      } else if(action==='delete-setor'){
+        var sid = t.dataset.setor;
+        var count = state.posts.filter(function(p){ return p.setorId===sid; }).length;
+        if(count>0){ showToast('Mova os '+count+' posto(s) deste setor antes de excluir.'); return; }
+        if(!confirm('Excluir este setor?')) return;
+        state.setores = state.setores.filter(function(s){ return s.id!==sid; });
+        state.selectedSetorIds = state.selectedSetorIds.filter(function(id){ return id!==sid; });
+        renderAllSetorDependent();
+      }
+    });
+
+    document.getElementById('page-listas').addEventListener('change', function(e){
+      var t = e.target;
+      var action = t.dataset.action;
+      if(!action) return;
+      if(action==='add-emp-post' && t.value){
+        var emp = findEmployee(t.dataset.emp);
+        emp.postIds.push(t.value);
+        renderListaFuncionarios();
+        renderFormacaoSuggestions();
+      } else if(action==='add-post-epi' && t.value){
+        var post = findPost(t.dataset.post);
+        post.epis.push(t.value);
+        renderListaPostos();
+      } else if(action==='change-post-setor' && t.value){
+        var post2 = findPost(t.dataset.post);
+        post2.setorId = t.value;
+        renderAllSetorDependent();
+      } else if(action==='change-post-criticidade' && t.value){
+        var post3 = findPost(t.dataset.post);
+        post3.criticidade = t.value;
+        renderListaPostos();
+        renderRodizioGrids();
+        renderFormacaoSuggestions();
+      } else if(action==='move-post-setor' && t.value){
+        var post4 = findPost(t.dataset.post);
+        post4.setorId = t.value;
+        renderAllSetorDependent();
+      }
+    });
+
+    document.getElementById('modal-overlay').addEventListener('click', function(e){
+      if(e.target.id==='modal-overlay') closeModal();
+    });
+    document.getElementById('modal-content').addEventListener('change', function(e){
+      var t = e.target;
+      if(t.dataset.action==='toggle-qualif'){
+        var emp = findEmployee(t.dataset.emp);
+        var pid = t.dataset.post;
+        if(t.checked){ if(emp.postIds.indexOf(pid)===-1) emp.postIds.push(pid); }
+        else { emp.postIds = emp.postIds.filter(function(p){ return p!==pid; }); }
+        renderListas(); renderFuncPostosCheckboxes();
+        renderFormacaoSuggestions();
+      }
+    });
+    document.getElementById('modal-content').addEventListener('click', function(e){
+      var t = e.target.closest('[data-action]');
+      if(!t) return;
+      var action = t.dataset.action;
+      if(action==='close'){ closeModal(); return; }
+      if(action==='pick-assign'){
+        state.schedule[t.dataset.day][t.dataset.post][parseInt(t.dataset.col,10)] = t.dataset.emp;
+        closeModal(); renderRodizioGrids();
+      } else if(action==='mark-senior'){
+        state.schedule[t.dataset.day][t.dataset.post][parseInt(t.dataset.col,10)] = 'SENIOR';
+        closeModal(); renderRodizioGrids();
+      } else if(action==='clear-cell'){
+        state.schedule[t.dataset.day][t.dataset.post][parseInt(t.dataset.col,10)] = null;
+        closeModal(); renderRodizioGrids();
+      } else if(action==='pick-absent'){
+        var idx = parseInt(t.dataset.idx,10);
+        var empId = t.dataset.emp;
+        state.absentees[currentDay][idx] = empId;
+        applyAbsence(currentDay, empId);
+        closeModal(); renderRodizio();
+      } else if(action==='pick-save-day'){
+        var day = t.dataset.day;
+        state.schedule[day] = JSON.parse(JSON.stringify(state.schedule[currentDay]));
+        saveStateToLocalStorage();
+        closeModal();
+        if(day===currentDay) renderRodizioGrids();
+        showToast('Rodízio copiado para '+dayLabel(day));
+      } else if(action==='confirm-backup-name'){
+        var scope = t.dataset.scope;
+        var nameInput = document.getElementById('backup-name-input');
+        var label = nameInput ? nameInput.value.trim() : '';
+        closeModal();
+        if(scope==='completo') downloadBackupCompleto(label);
+        else if(scope==='rodizio') downloadBackupRodizio(label);
+        else if(scope==='cadastro') downloadBackupCadastro(label);
+      }
+    });
+  });
+})();
+</script>
+<script>
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('sw.js').catch(function(err){
+        console.warn('Falha ao registrar o service worker:', err);
+      });
+    });
+  }
+</script>
+</body>
+</html>
