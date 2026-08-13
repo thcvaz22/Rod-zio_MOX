@@ -322,7 +322,7 @@
   .post-week-list{display:grid;gap:10px;margin-top:14px}.post-week-item{padding:12px 14px;border:1px solid #e2eaf0;border-radius:12px;background:#fff}.post-week-item strong{font-family:var(--font-mono);color:#0d3b66}.post-week-names{font-size:.82rem;color:#4f6679;margin-top:5px}
   .metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}.metric-card{padding:16px;border-radius:14px;background:#f5f9fc;border:1px solid #e1e9ef}.metric-number{font:800 1.5rem var(--font-display);color:#0d3b66}.metric-label{font-size:.76rem;color:#5b7185;margin-top:4px}
   .install-banner,.update-banner{position:fixed;z-index:100;left:50%;transform:translateX(-50%);bottom:22px;width:min(680px,calc(100% - 28px));display:flex;align-items:center;gap:14px;background:rgba(7,18,34,.96);color:#fff;border:1px solid rgba(255,255,255,.18);box-shadow:0 18px 55px rgba(0,0,0,.45);border-radius:16px;padding:13px 14px}.install-banner.hidden,.update-banner.hidden{display:none}.install-banner div{flex:1;display:flex;flex-direction:column;gap:3px}.install-banner span{font-size:.75rem;color:#b8cada}.install-close{border:0;background:transparent;color:#fff;font-size:1rem;cursor:pointer}
-  @media(max-width:760px){body{padding-bottom:84px}.topbar{position:relative;z-index:10;padding:12px 14px;min-height:60px;display:flex;align-items:center;justify-content:space-between}.logo{height:34px;max-width:46vw;object-fit:contain;position:relative;z-index:12}.brand-tag{display:none}.topbar-actions{width:auto;margin-left:auto}.main-tabs{position:fixed;z-index:60;left:0;right:0;bottom:0;background:rgba(5,12,22,.97);backdrop-filter:blur(14px);padding:8px 6px max(8px,env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(6,1fr);gap:3px;border-top:1px solid rgba(255,255,255,.12);box-shadow:0 -10px 30px rgba(0,0,0,.25)}.main-tabs button{padding:9px 3px;border:0;border-radius:10px;font-size:.64rem;white-space:nowrap}.page{padding:18px 12px 28px}.day-tabs{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}.day-tabs button{flex:0 0 auto}.rodizio-grids{grid-template-columns:1fr}.area-block{overflow-x:auto}.dashboard-grid{grid-template-columns:1fr}.efficiency-row{grid-template-columns:90px 1fr 46px}.install-banner{bottom:90px;align-items:flex-start}.install-banner .btn{padding:9px 12px}.update-banner{bottom:90px}td.cell.ausente{background:#e5484d!important;color:#fff!important}td.cell.reposicao.senior{background:#ffcc33!important;color:#5c4200!important}td.cell.reposicao.emprestimo{background:#7c3aed!important;color:#fff!important}}
+  @media(max-width:760px){body{padding-bottom:84px}.topbar{position:relative;z-index:10;padding:calc(12px + env(safe-area-inset-top)) 14px 12px;min-height:104px;display:grid;grid-template-columns:1fr;grid-template-rows:auto auto;justify-items:center;align-items:center;gap:7px}.logo{height:46px;width:auto;max-width:82vw;object-fit:contain;position:relative;z-index:12;margin:0 auto;display:block}.brand-tag{display:block;font-size:.66rem;text-align:center;line-height:1.1}.topbar-actions{width:100%;margin:0;min-height:0}.main-tabs{position:fixed;z-index:60;left:0;right:0;bottom:0;background:rgba(5,12,22,.97);backdrop-filter:blur(14px);padding:8px 6px max(8px,env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(6,1fr);gap:3px;border-top:1px solid rgba(255,255,255,.12);box-shadow:0 -10px 30px rgba(0,0,0,.25)}.main-tabs button{padding:9px 3px;border:0;border-radius:10px;font-size:.64rem;white-space:nowrap}.page{padding:18px 12px 28px}.day-tabs{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}.day-tabs button{flex:0 0 auto}.rodizio-grids{grid-template-columns:1fr}.area-block{overflow-x:auto}.dashboard-grid{grid-template-columns:1fr}.efficiency-row{grid-template-columns:90px 1fr 46px}.install-banner{bottom:90px;align-items:flex-start}.install-banner .btn{padding:9px 12px}.update-banner{bottom:90px}td.cell.ausente{background:#e5484d!important;color:#fff!important}td.cell.reposicao.senior{background:#ffcc33!important;color:#5c4200!important}td.cell.reposicao.emprestimo{background:#7c3aed!important;color:#fff!important}}
 
 </style>
 </head>
@@ -392,7 +392,7 @@
       <div class="dashboard-head">
         <div>
           <h2>Dashboard de Eficiência</h2>
-          <p class="hint-small">A eficiência cai com repetição de posto, ausências, uso de Sênior/Empréstimo e dias sem rodízio completo. Na semana, também penaliza operador repetindo o mesmo posto mais de 3 vezes.</p>
+          <p class="hint-small">Cálculo: cada ausência custa 15 pontos. Empréstimo recupera 10 pontos dessa ausência e Sênior recupera 5. Cada repetição do mesmo posto por funcionário no dia custa 5 pontos. Na semana, cada ocorrência acima de 3 vezes no mesmo posto e cada dia sem rodízio completo também reduzem a eficiência geral.</p>
         </div>
         <button class="btn" id="btn-gerar-semana">⚡ Gerar rodízio mais eficiente</button>
       </div>
@@ -1008,13 +1008,13 @@
     });
     var covered=normalFilled+senior+emprestimo;
     var coverage=total ? covered/total*100 : 100;
-    var absentRate=total ? absent/total : 0;
-    var repoRate=total ? (senior+emprestimo)/total : 0;
-    var repeatRate=total ? repeatedAssignments/total : 0;
-    var consecutiveRate=total ? repeatSamePost/total : 0;
-    // Regra de eficiência diária: ausência pesa mais; reposição reduz eficiência mesmo cobrindo o posto;
-    // repetição do mesmo posto reduz a justiça do rodízio, com peso extra se for consecutiva.
-    var penalty = absentRate*55 + repoRate*22 + repeatRate*34 + consecutiveRate*20 + qualificationErrors*12;
+    // Eficiência diária em pontos percentuais, com impacto propositalmente forte:
+    // - cada ausência sem cobertura: -15 pontos;
+    // - cada vaga reposta começa como uma ausência (-15), mas recupera +10 com Empréstimo ou +5 com Sênior;
+    //   portanto Empréstimo tem impacto líquido de -5 e Sênior de -10;
+    // - cada repetição do mesmo posto pelo mesmo funcionário no dia: -5 pontos;
+    // - funcionário escalado fora de sua formação: -10 pontos.
+    var penalty = (absent + senior + emprestimo)*15 - emprestimo*10 - senior*5 + repeatedAssignments*5 + qualificationErrors*10;
     var score=Math.max(0,Math.min(100,100-penalty));
     var colScores=perCol.map(function(x){return x.total ? x.filled/x.total*100 : 100;});
     return {score:score,coverage:coverage,absent:absent,senior:senior,emprestimo:emprestimo,total:total,repeatedAssignments:repeatedAssignments,repeatSamePost:repeatSamePost,loads:perEmployee,colScores:colScores,perEmployeePosts:perEmployeePosts};
@@ -1052,8 +1052,9 @@
     });
     var overThree=0;
     Object.keys(weeklyPairCounts).forEach(function(k){ if(weeklyPairCounts[k]>3) overThree += weeklyPairCounts[k]-3; });
-    // Justiça semanal: repetições acima de 3 no mesmo posto e dias sem rodízio completo reduzem a nota geral.
-    var weeklyPenalty = Math.min(30,overThree*2.5) + incompleteDays*8;
+    // Justiça semanal: cada ocorrência acima da 3ª vez no mesmo posto custa 5 pontos.
+    // Cada dia sem rodízio suficientemente preenchido custa 15 pontos na eficiência geral.
+    var weeklyPenalty = overThree*5 + incompleteDays*15;
     var score=Math.max(0,Math.min(100,base-weeklyPenalty));
     return {score:score,coverage:coverage,repeats:repeats,absent:absent,senior:senior,emprestimo:emprestimo,days:vals,overThree:overThree,incompleteDays:incompleteDays};
   }
@@ -1190,7 +1191,7 @@
     var sched = state.schedule[day];
     var headerCols = '';
     var metrics=scheduleMetrics(day);
-    for(var i=0;i<n;i++) headerCols += '<th class="turn-head turn-'+i+'">'+(i+1)+'º<span class="turn-eff">Eficiência '+Math.round(metrics.colScores[i]||0)+'%</span></th>';
+    for(var i=0;i<n;i++) headerCols += '<th class="turn-head turn-'+i+'">'+(i+1)+'º</th>';
     var rows = posts.map(function(post){
       var cells = '';
       for(var c=0;c<n;c++){
