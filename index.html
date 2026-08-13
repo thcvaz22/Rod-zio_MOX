@@ -365,7 +365,6 @@
         <button class="btn ghost" id="btn-limpar">🧹 Limpar Rodízio</button>
         <button class="btn" id="btn-exportar">📤 Exportar imagem</button>
       </div>
-      <div id="day-efficiency" class="efficiency-card"></div>
       <div class="rodizio-grids" id="rodizio-grids"></div>
       <p class="crit-hint">🟢 Verde · 🟡 Amarelo · 🔴 Vermelho — classificação do posto · 🔒 vaga travada por Formação/Reposição · <b style="color:#d93636">Ausente</b> · <b style="color:#6d35c5">Empréstimo</b> · <b style="color:#8a6d00">Sênior</b></p>
       <div class="ausentes-panel">
@@ -392,7 +391,7 @@
       <div class="dashboard-head">
         <div>
           <h2>Dashboard de Eficiência</h2>
-          <p class="hint-small">Cálculo: cada ausência custa 15 pontos. Empréstimo recupera 10 pontos dessa ausência e Sênior recupera 5. Cada repetição do mesmo posto por funcionário no dia custa 5 pontos. Na semana, cada ocorrência acima de 3 vezes no mesmo posto e cada dia sem rodízio completo também reduzem a eficiência geral.</p>
+          <p class="hint-small">Eficiência geral semanal: parte de 100%. Cada ausência reduz 5 pontos; uma reposição por Empréstimo recupera 3 pontos e uma reposição por Sênior recupera 2 pontos. Cada ocorrência acima da 3ª vez do mesmo funcionário no mesmo posto na semana reduz 1 ponto. Cada funcionário com menos de 3 postos cadastrados reduz 3 pontos e cada funcionário marcado como restrito reduz 3 pontos.</p>
         </div>
         <button class="btn" id="btn-gerar-semana">⚡ Gerar rodízio mais eficiente</button>
       </div>
@@ -1039,24 +1038,44 @@
 
   function weekMetrics(scheduleOverride){
     var vals=DAYS.map(function(d){return scheduleMetrics(d.id, scheduleOverride ? scheduleOverride[d.id] : null);});
-    var base=vals.length?vals.reduce(function(a,m){return a+m.score;},0)/vals.length:100;
     var coverage=vals.length?vals.reduce(function(a,m){return a+m.coverage;},0)/vals.length:100;
     var repeats=vals.reduce(function(a,m){return a+m.repeatedAssignments;},0);
     var absent=vals.reduce(function(a,m){return a+m.absent;},0);
-    var senior=vals.reduce(function(a,m){return a+m.senior;},0), emprestimo=vals.reduce(function(a,m){return a+m.emprestimo;},0);
+    var senior=vals.reduce(function(a,m){return a+m.senior;},0);
+    var emprestimo=vals.reduce(function(a,m){return a+m.emprestimo;},0);
     var weeklyPairCounts={}, incompleteDays=0;
     DAYS.forEach(function(d,idx){
       var m=vals[idx], sched=scheduleOverride ? (scheduleOverride[d.id]||{}) : (state.schedule[d.id]||{}), meaningful=0;
-      state.posts.forEach(function(p){ (sched[p.id]||[]).forEach(function(v){ if(v && v!=='AUSENTE' && v!=='SENIOR') meaningful++; var eid=resolveOccupant(v); if(eid){ var key=eid+'|'+p.id; weeklyPairCounts[key]=(weeklyPairCounts[key]||0)+1; } }); });
+      state.posts.forEach(function(p){
+        (sched[p.id]||[]).forEach(function(v){
+          if(v && v!=='AUSENTE' && v!=='SENIOR') meaningful++;
+          var eid=resolveOccupant(v);
+          if(eid){ var key=eid+'|'+p.id; weeklyPairCounts[key]=(weeklyPairCounts[key]||0)+1; }
+        });
+      });
       if(m.total>0 && (meaningful/m.total)<0.8) incompleteDays++;
     });
     var overThree=0;
     Object.keys(weeklyPairCounts).forEach(function(k){ if(weeklyPairCounts[k]>3) overThree += weeklyPairCounts[k]-3; });
-    // Justiça semanal: cada ocorrência acima da 3ª vez no mesmo posto custa 5 pontos.
-    // Cada dia sem rodízio suficientemente preenchido custa 15 pontos na eficiência geral.
-    var weeklyPenalty = overThree*5 + incompleteDays*15;
-    var score=Math.max(0,Math.min(100,base-weeklyPenalty));
-    return {score:score,coverage:coverage,repeats:repeats,absent:absent,senior:senior,emprestimo:emprestimo,days:vals,overThree:overThree,incompleteDays:incompleteDays};
+    var underThreeEmployees=state.employees.filter(function(e){ return (e.postIds||[]).length<3; }).length;
+    var restrictedEmployees=state.employees.filter(function(e){ return !!e.restritoVerde; }).length;
+
+    // Eficiência geral semanal independente da eficiência diária:
+    // - ausência: -5 pontos;
+    // - Empréstimo: +3 pontos de recuperação;
+    // - Sênior: +2 pontos de recuperação;
+    // - cada ocorrência acima da 3ª vez do mesmo funcionário no mesmo posto: -1 ponto;
+    // - funcionário com menos de 3 postos cadastrados: -3 pontos;
+    // - funcionário restrito: -3 pontos.
+    var score = 100
+      - absent*5
+      + emprestimo*3
+      + senior*2
+      - overThree*1
+      - underThreeEmployees*3
+      - restrictedEmployees*3;
+    score=Math.max(0,Math.min(100,score));
+    return {score:score,coverage:coverage,repeats:repeats,absent:absent,senior:senior,emprestimo:emprestimo,days:vals,overThree:overThree,incompleteDays:incompleteDays,underThreeEmployees:underThreeEmployees,restrictedEmployees:restrictedEmployees};
   }
 
   function generateBestWeek(){
@@ -1225,11 +1244,7 @@
     value=Math.max(0,Math.min(100,Number(value)||0));
     return '<div class="efficiency-row"><strong>'+escapeHtml(label)+'</strong><div class="efficiency-track"><div class="efficiency-fill" style="width:'+value.toFixed(1)+'%"></div></div><span class="efficiency-value">'+Math.round(value)+'%</span></div>';
   }
-  function renderDayEfficiency(){
-    var el=document.getElementById('day-efficiency'); if(!el) return;
-    var m=scheduleMetrics(currentDay);
-    el.innerHTML=efficiencyBar('Eficiência do dia',m.score);
-  }
+  function renderDayEfficiency(){ /* Eficiência por dia removida da interface; cálculo interno mantido para otimização. */ }
 
   function renderRodizioGrids(){
     saveStateToLocalStorage();
@@ -2014,9 +2029,8 @@
   function renderDashboard(){
     var wk=weekMetrics(), e=document.getElementById('dashboard-week-efficiency');
     if(e){
-      var h='<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:14px 0 8px"><div><div class="hint-small" style="margin:0">Eficiência geral da semana</div><div style="font:800 2.35rem var(--font-display);color:#0d3b66">'+Math.round(wk.score)+'%</div></div><div class="hint-small" style="margin:0">'+wk.incompleteDays+' dia(s) incompleto(s) · '+wk.overThree+' repetição(ões) acima de 3x</div></div>';
+      var h='<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:14px 0 8px"><div><div class="hint-small" style="margin:0">Eficiência geral da semana</div><div style="font:800 2.35rem var(--font-display);color:#0d3b66">'+Math.round(wk.score)+'%</div></div><div class="hint-small" style="margin:0">'+wk.absent+' ausência(s) · '+wk.emprestimo+' empréstimo(s) · '+wk.senior+' sênior(es)</div></div>';
       h+=efficiencyBar('Eficiência geral',wk.score);
-      wk.days.forEach(function(m,i){h+=efficiencyBar(DAYS[i].label,m.score);});
       e.innerHTML=h;
     }
     var versatility=state.employees.map(function(emp){return {label:emp.name,value:(emp.postIds||[]).length};}).sort(function(a,b){return b.value-a.value || a.label.localeCompare(b.label);});
@@ -2029,7 +2043,7 @@
     if(det) det.innerHTML=state.posts.filter(function(p){return !q || p.name.toLowerCase().indexOf(q)!==-1;}).map(function(p){ var ids=Object.keys(map[p.id]||{}), names=ids.map(function(id){var emp=findEmployee(id);return emp?emp.name:id;}).sort(); return '<div class="post-week-item"><strong>'+escapeHtml(p.name)+'</strong><div class="post-week-names">'+(names.length?escapeHtml(names.join(' · ')):'Nenhum operador escalado')+'</div></div>';}).join('');
     var fairness=document.getElementById('dashboard-fairness');
     if(fairness){
-      fairness.innerHTML='<div class="metric-card"><div class="metric-number">'+wk.repeats+'</div><div class="metric-label">Repetições de posto no dia</div></div><div class="metric-card"><div class="metric-number">'+wk.overThree+'</div><div class="metric-label">Repetições acima de 3x/semana</div></div><div class="metric-card"><div class="metric-number">'+wk.absent+'</div><div class="metric-label">Ausências sem cobertura</div></div><div class="metric-card"><div class="metric-number">'+(wk.senior+wk.emprestimo)+'</div><div class="metric-label">Reposições Sênior/Empréstimo</div></div><div class="metric-card"><div class="metric-number">'+wk.incompleteDays+'</div><div class="metric-label">Dias com rodízio incompleto</div></div>';
+      fairness.innerHTML='<div class="metric-card"><div class="metric-number">'+wk.overThree+'</div><div class="metric-label">Ocorrências acima de 3x no mesmo posto</div></div><div class="metric-card"><div class="metric-number">'+wk.absent+'</div><div class="metric-label">Ausências sem cobertura</div></div><div class="metric-card"><div class="metric-number">'+wk.emprestimo+'</div><div class="metric-label">Reposições por Empréstimo</div></div><div class="metric-card"><div class="metric-number">'+wk.senior+'</div><div class="metric-label">Reposições por Sênior</div></div><div class="metric-card"><div class="metric-number">'+wk.underThreeEmployees+'</div><div class="metric-label">Funcionários com menos de 3 postos</div></div><div class="metric-card"><div class="metric-number">'+wk.restrictedEmployees+'</div><div class="metric-label">Funcionários restritos</div></div>';
     }
   }
 
