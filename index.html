@@ -365,6 +365,7 @@
         <button class="btn ghost" id="btn-limpar">🧹 Limpar Rodízio</button>
         <button class="btn" id="btn-exportar">📤 Exportar imagem</button>
       </div>
+      <div id="day-efficiency"></div>
       <div class="rodizio-grids" id="rodizio-grids"></div>
       <p class="crit-hint">🟢 Verde · 🟡 Amarelo · 🔴 Vermelho — classificação do posto · 🔒 vaga travada por Formação/Reposição · <b style="color:#d93636">Ausente</b> · <b style="color:#6d35c5">Empréstimo</b> · <b style="color:#8a6d00">Sênior</b></p>
       <div class="ausentes-panel">
@@ -391,7 +392,6 @@
       <div class="dashboard-head">
         <div>
           <h2>Dashboard de Eficiência</h2>
-          <p class="hint-small">Eficiência geral semanal: parte de 100%. Cada ausência reduz 5 pontos; uma reposição por Empréstimo recupera 3 pontos e uma reposição por Sênior recupera 2 pontos. Cada ocorrência acima da 3ª vez do mesmo funcionário no mesmo posto na semana reduz 1 ponto. Cada funcionário com menos de 3 postos cadastrados reduz 3 pontos e cada funcionário marcado como restrito reduz 3 pontos.</p>
         </div>
         <button class="btn" id="btn-gerar-semana">⚡ Gerar rodízio mais eficiente</button>
       </div>
@@ -659,7 +659,8 @@
     absentees: {},
     formacoes: [],
     formacaoDismissed: [],
-    reposicoes: {}
+    reposicoes: {},
+    efficiencyBaseline: null
   };
   DAYS.forEach(function(d){ state.absentees[d.id] = [null,null,null,null,null,null]; state.reposicoes[d.id] = []; });
 
@@ -739,6 +740,7 @@
         formacoes: state.formacoes,
         formacaoDismissed: state.formacaoDismissed,
         reposicoes: state.reposicoes,
+        efficiencyBaseline: state.efficiencyBaseline,
         savedAt: new Date().toISOString()
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
@@ -761,6 +763,7 @@
       if(data.formacoes) state.formacoes = data.formacoes;
       if(data.formacaoDismissed) state.formacaoDismissed = data.formacaoDismissed;
       if(data.reposicoes) state.reposicoes = data.reposicoes;
+      if(data.efficiencyBaseline && typeof data.efficiencyBaseline === 'object') state.efficiencyBaseline = data.efficiencyBaseline;
       DAYS.forEach(function(d){ if(!state.absentees[d.id]) state.absentees[d.id] = [null,null,null,null,null,null]; if(!state.reposicoes[d.id]) state.reposicoes[d.id] = []; });
       state.posts.forEach(function(p){ if(!p.criticidade) p.criticidade='verde'; if(!p.epis) p.epis=[]; });
       state.employees.forEach(function(e){ if(!e.postIds) e.postIds=[]; });
@@ -1060,20 +1063,45 @@
     var underThreeEmployees=state.employees.filter(function(e){ return (e.postIds||[]).length<3; }).length;
     var restrictedEmployees=state.employees.filter(function(e){ return !!e.restritoVerde; }).length;
 
-    // Eficiência geral semanal independente da eficiência diária:
-    // - ausência: -5 pontos;
-    // - Empréstimo: +3 pontos de recuperação;
-    // - Sênior: +2 pontos de recuperação;
-    // - cada ocorrência acima da 3ª vez do mesmo funcionário no mesmo posto: -1 ponto;
-    // - funcionário com menos de 3 postos cadastrados: -3 pontos;
-    // - funcionário restrito: -3 pontos.
-    var score = 100
-      - absent*5
-      + emprestimo*3
-      + senior*2
-      - overThree*1
-      - underThreeEmployees*3
-      - restrictedEmployees*3;
+    // Eficiência geral semanal: a condição atual da equipe vira o ponto de referência de 76%.
+    // A partir desse retrato inicial, reduzir repetições, diminuir funcionários com menos de
+    // 3 postos e reduzir restrições faz a nota subir progressivamente até 100%.
+    // Ausências, Empréstimos e Sêniores são ocorrências operacionais e podem derrubar a nota
+    // abaixo de 76%, pois representam necessidade de cobertura fora do cenário ideal.
+    //
+    // Pesos estruturais usados para distribuir os 24 pontos de evolução (76 -> 100):
+    // - repetição acima da 3ª vez no mesmo posto: peso 1 por ocorrência excedente;
+    // - funcionário com menos de 3 postos cadastrados: peso 3 por funcionário;
+    // - funcionário restrito: peso 2 por funcionário.
+    var structuralUnits = overThree + (underThreeEmployees * 3) + (restrictedEmployees * 2);
+
+    if(!state.efficiencyBaseline || state.efficiencyBaseline.version !== 9){
+      state.efficiencyBaseline = {
+        version: 9,
+        structuralUnits: Math.max(1, structuralUnits),
+        overThree: overThree,
+        underThreeEmployees: underThreeEmployees,
+        restrictedEmployees: restrictedEmployees,
+        createdAt: new Date().toISOString()
+      };
+      // Salva o retrato da condição atual apenas uma vez. Assim o sistema sabe que
+      // este cenário corresponde a aproximadamente 76% e mede a evolução real dali em diante.
+      saveStateToLocalStorage();
+    }
+
+    var baselineUnits = Math.max(1, Number(state.efficiencyBaseline.structuralUnits) || 1);
+    var structuralPenalty = 24 * (structuralUnits / baselineUnits);
+    var score = 100 - structuralPenalty;
+
+    // Ocorrências operacionais: reduzem a eficiência além do patamar estrutural atual.
+    // Elas NÃO fazem parte do ponto de referência de 76%, portanto novas faltas/reposições
+    // aparecem imediatamente na nota.
+    score -= absent * 5;
+    score -= emprestimo * 3;
+    score -= senior * 2;
+
+    // Não existe piso artificial. Se as condições piorarem a eficiência pode ficar abaixo de 76%;
+    // se todas as variáveis estruturais forem resolvidas e não houver ocorrências, chega a 100%.
     score=Math.max(0,Math.min(100,score));
     return {score:score,coverage:coverage,repeats:repeats,absent:absent,senior:senior,emprestimo:emprestimo,days:vals,overThree:overThree,incompleteDays:incompleteDays,underThreeEmployees:underThreeEmployees,restrictedEmployees:restrictedEmployees};
   }
@@ -1244,7 +1272,23 @@
     value=Math.max(0,Math.min(100,Number(value)||0));
     return '<div class="efficiency-row"><strong>'+escapeHtml(label)+'</strong><div class="efficiency-track"><div class="efficiency-fill" style="width:'+value.toFixed(1)+'%"></div></div><span class="efficiency-value">'+Math.round(value)+'%</span></div>';
   }
-  function renderDayEfficiency(){ /* Eficiência por dia removida da interface; cálculo interno mantido para otimização. */ }
+  function renderDayEfficiency(){
+    var el=document.getElementById('day-efficiency');
+    if(!el) return;
+    var m=scheduleMetrics(currentDay);
+    var label=dayLabel(currentDay);
+    var details=[];
+    if(m.absent) details.push(m.absent+' ausência(s)');
+    if(m.emprestimo) details.push(m.emprestimo+' empréstimo(s)');
+    if(m.senior) details.push(m.senior+' sênior(es)');
+    if(m.repeatedAssignments) details.push(m.repeatedAssignments+' repetição(ões) de posto');
+    el.innerHTML='<div class="efficiency-card" style="margin:4px 0 18px">'+
+      '<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:4px">'+
+        '<div><div class="hint-small" style="margin:0">Eficiência do rodízio — '+escapeHtml(label)+'</div><div style="font:800 2rem var(--font-display);color:#0d3b66">'+Math.round(m.score)+'%</div></div>'+
+        '<div class="hint-small" style="margin:0">'+(details.length?escapeHtml(details.join(' · ')):'Rodízio sem penalidades')+'</div>'+
+      '</div>'+efficiencyBar('Eficiência do dia',m.score)+
+    '</div>';
+  }
 
   function renderRodizioGrids(){
     saveStateToLocalStorage();
