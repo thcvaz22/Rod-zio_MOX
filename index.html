@@ -414,10 +414,6 @@
       <input type="text" id="dashboard-post-search" class="search-box" placeholder="Buscar posto...">
       <div id="dashboard-post-details" class="post-week-list"></div>
     </section>
-    <section class="card stacked-card">
-      <h2>Indicadores de justiça do rodízio</h2>
-      <div id="dashboard-fairness" class="metric-grid"></div>
-    </section>
     <p class="footnote">Criado por: Thiago Vaz - LB14762</p>
   </main>
 
@@ -2227,10 +2223,6 @@
     var q=((document.getElementById('dashboard-post-search')||{}).value||'').toLowerCase().trim();
     var det=document.getElementById('dashboard-post-details');
     if(det) det.innerHTML=state.posts.filter(function(p){return !q || p.name.toLowerCase().indexOf(q)!==-1;}).map(function(p){ var ids=Object.keys(map[p.id]||{}), names=ids.map(function(id){var emp=findEmployee(id);return emp?emp.name:id;}).sort(); return '<div class="post-week-item"><strong>'+escapeHtml(p.name)+'</strong><div class="post-week-names">'+(names.length?escapeHtml(names.join(' · ')):'Nenhum operador escalado')+'</div></div>';}).join('');
-    var fairness=document.getElementById('dashboard-fairness');
-    if(fairness){
-      fairness.innerHTML='<div class="metric-card"><div class="metric-number">'+wk.overThree+'</div><div class="metric-label">Ocorrências acima de 3x no mesmo posto</div></div><div class="metric-card"><div class="metric-number">'+wk.absent+'</div><div class="metric-label">Ausências sem cobertura</div></div><div class="metric-card"><div class="metric-number">'+wk.emprestimo+'</div><div class="metric-label">Reposições por Empréstimo</div></div><div class="metric-card"><div class="metric-number">'+wk.senior+'</div><div class="metric-label">Reposições por Sênior</div></div><div class="metric-card"><div class="metric-number">'+wk.underThreeEmployees+'</div><div class="metric-label">Funcionários com menos de 3 postos</div></div><div class="metric-card"><div class="metric-number">'+wk.restrictedEmployees+'</div><div class="metric-label">Funcionários restritos</div></div>';
-    }
   }
 
   function switchPage(page){
