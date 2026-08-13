@@ -1,46 +1,44 @@
-// Sistema de Rodízio - RGdB
-// Bump CACHE_NAME (e.g. v2, v3...) every time you redeploy new files,
-// so returning visitors pick up the update instead of a stale cache.
-var CACHE_NAME = 'rodizio-rgdb-v2';
-var APP_SHELL = [
-  './',
-  './index.html',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
-];
+// Rodízio RGdB - Service Worker robusto
+// O HTML usa network-first para evitar versões antigas presas em cache.
+const CACHE_PREFIX = 'rodizio-rgdb-';
+const CACHE_NAME = CACHE_PREFIX + 'shell-20260812';
+const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
-self.addEventListener('install', function(event){
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(function(cache){
-      return cache.addAll(APP_SHELL);
-    })
-  );
-  self.skipWaiting();
+self.addEventListener('install', event => {
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));
 });
 
-self.addEventListener('activate', function(event){
+self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(function(keys){
-      return Promise.all(keys.filter(function(k){ return k !== CACHE_NAME; }).map(function(k){ return caches.delete(k); }));
-    })
+    caches.keys().then(keys => Promise.all(keys.filter(k => k.startsWith(CACHE_PREFIX) && k !== CACHE_NAME).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// Network-first: always try to fetch the latest version when online;
-// fall back to the last cached copy (or the app shell) when offline.
-self.addEventListener('fetch', function(event){
-  if(event.request.method !== 'GET') return;
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
+});
+
+self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
+  const req = event.request;
+  if (req.mode === 'navigate') {
+    event.respondWith(
+      fetch(req).then(res => {
+        const copy = res.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put('./index.html', copy));
+        return res;
+      }).catch(() => caches.match('./index.html'))
+    );
+    return;
+  }
   event.respondWith(
-    fetch(event.request).then(function(response){
-      var copy = response.clone();
-      caches.open(CACHE_NAME).then(function(cache){ cache.put(event.request, copy); });
-      return response;
-    }).catch(function(){
-      return caches.match(event.request).then(function(cached){
-        return cached || caches.match('./index.html');
-      });
+    caches.match(req).then(cached => {
+      const network = fetch(req).then(res => {
+        if (res && res.ok) caches.open(CACHE_NAME).then(cache => cache.put(req, res.clone()));
+        return res;
+      }).catch(() => cached);
+      return cached || network;
     })
   );
 });

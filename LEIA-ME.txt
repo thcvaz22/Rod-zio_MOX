@@ -1,0 +1,27 @@
+RGdB · Sistema de Rodízio PWA — versão otimizada
+
+COMO TESTAR LOCALMENTE
+1. Não abra apenas com duplo clique no index.html se quiser testar instalação/offline.
+2. Na pasta do projeto, execute um servidor local. Exemplo com Node.js:
+   npx serve .
+3. Abra o endereço exibido no navegador.
+
+NO GITHUB PAGES
+Substitua os arquivos do repositório por esta versão e faça commit/push.
+O Service Worker usa atualização network-first para o HTML e mostra um aviso quando uma nova versão está disponível.
+
+PRINCIPAIS MELHORIAS DESTA VERSÃO
+- Gerador busca o rodízio de maior eficiência entre várias combinações.
+- Penaliza repetição do mesmo posto pelo mesmo operador no mesmo dia.
+- Barras de eficiência geral e por 1º/2º/3º rodízio.
+- Dashboard com eficiência por dia e geral da semana.
+- Botão para otimizar todos os dias da semana.
+- Gráficos de operadores diferentes por posto e carga semanal por operador.
+- Lista dinâmica de quem passa por cada posto durante a semana.
+- Indicadores de justiça: repetições, vagas sem cobertura e diferença de carga.
+- Navegação inferior otimizada para Android/celular.
+- Aviso de instalação do PWA.
+- Fluxo de atualização do Service Worker com aviso “Atualizar agora”.
+
+OBSERVAÇÃO
+Os dados continuam 100% locais neste navegador/dispositivo, usando LocalStorage, conforme solicitado.

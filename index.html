@@ -165,6 +165,9 @@
   td.cell:hover{ background:#eef4f8; }
   td.cell.empty{ color:#9fb0bd; font-style:italic; }
   td.cell.senior{ background:var(--amber); color:var(--amber-ink); font-weight:700; border-radius:8px; }
+  td.cell.ausente{ background:#ff5c5c; color:#fff; font-weight:700; border-radius:8px; }
+  td.cell.emprestimo{ background:#8b5cf6; color:#fff; font-weight:700; border-radius:8px; }
+  td.cell.reposicao{ cursor:default; }
   td.cell.locked{ background:#e7edff; color:#1c4fb0; font-weight:600; cursor:default; }
 
   .crit-dot{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; vertical-align:middle; }
@@ -192,6 +195,21 @@
   .ausente-slot.filled{ border-style:solid; border-color:#e3eaf0; background:#fff; justify-content:space-between; }
   .ausente-slot button.add{ background:none; border:none; color:#0d3b66; font-weight:600; cursor:pointer; font-family:var(--font-display); font-size:.85rem; }
   .ausente-slot button.rm{ background:none; border:none; color:#b13a2f; font-weight:700; cursor:pointer; font-size:.95rem; }
+  .reposicoes-panel{ margin-top:20px; padding-top:18px; border-top:1px solid #e3eaf0; }
+  .reposicoes-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .reposicoes-head h3{ margin:0; font-family:var(--font-display); font-size:1rem; color:#0d3b66; }
+  .reposicoes-list{ display:grid; gap:10px; margin-top:12px; }
+  .reposicao-item{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 13px; border:1px solid #e0e8ef; border-radius:12px; background:#fff; }
+  .reposicao-meta{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:.84rem; }
+  .reposicao-badge{ font-family:var(--font-display); font-weight:700; font-size:.72rem; padding:3px 9px; border-radius:999px; }
+  .reposicao-badge.senior{ background:var(--amber); color:var(--amber-ink); }
+  .reposicao-badge.emprestimo{ background:#8b5cf6; color:#fff; }
+  .reposicao-item button{ border:0; background:none; color:#b13a2f; cursor:pointer; font-weight:700; }
+  .reposicao-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .reposicao-turnos{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:12px; }
+  .reposicao-grid label,.reposicao-turnos label{ font-size:.78rem; color:#33506b; font-family:var(--font-display); }
+  .reposicao-grid input,.reposicao-grid select,.reposicao-turnos select{ width:100%; margin-top:5px; padding:10px 11px; border:1px solid #d3dde4; border-radius:8px; font-family:var(--font-body); }
+  @media(max-width:650px){ .reposicao-grid,.reposicao-turnos{ grid-template-columns:1fr; } }
 
   .backup-panel{ margin-top:26px; padding-top:20px; border-top:1px solid #e3eaf0; }
   .backup-panel h3{ font-family:var(--font-display); font-size:1rem; color:#0d3b66; }
@@ -283,6 +301,24 @@
     .topbar{ padding:12px 16px; }
     .topbar-actions{ width:100%; }
   }
+
+  .efficiency-card{background:linear-gradient(135deg,#f7fbff,#eefbf6);border:1px solid #d7e8e2;border-radius:14px;padding:14px 16px;margin-bottom:18px;box-shadow:0 10px 24px -20px rgba(0,0,0,.45)}
+  .efficiency-row{display:grid;grid-template-columns:150px 1fr 58px;gap:12px;align-items:center;margin:7px 0;font-size:.82rem}
+  .efficiency-track{height:10px;background:#dde7ed;border-radius:999px;overflow:hidden}
+  .efficiency-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--red),var(--amber) 45%,var(--green) 75%,var(--teal));transition:width .35s ease}
+  .efficiency-value{font-family:var(--font-mono);font-weight:800;text-align:right;color:#173b57}
+  .turn-head{min-width:105px}.turn-eff{display:block;font-size:.62rem;text-transform:none;letter-spacing:0;margin-top:4px;color:#506b82;font-family:var(--font-body)}
+  table.rodizio th.turn-0,table.rodizio td.turn-0{background:rgba(47,111,237,.035)}
+  table.rodizio th.turn-1,table.rodizio td.turn-1{background:rgba(23,193,160,.045)}
+  table.rodizio th.turn-2,table.rodizio td.turn-2{background:rgba(255,204,51,.055)}
+  .dashboard-head{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}.dashboard-head h2{margin-bottom:6px}
+  .dashboard-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}.dashboard-grid .stacked-card{margin-top:22px}
+  .bar-chart{display:grid;gap:9px;max-height:520px;overflow:auto;padding-right:5px}.bar-row{display:grid;grid-template-columns:minmax(75px,130px) 1fr 42px;gap:10px;align-items:center;font-size:.78rem}.bar-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bar-track{height:12px;background:#e6edf2;border-radius:999px;overflow:hidden}.bar-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--teal),var(--green));border-radius:999px}.bar-value{text-align:right;font-family:var(--font-mono);font-weight:700}
+  .post-week-list{display:grid;gap:10px;margin-top:14px}.post-week-item{padding:12px 14px;border:1px solid #e2eaf0;border-radius:12px;background:#fff}.post-week-item strong{font-family:var(--font-mono);color:#0d3b66}.post-week-names{font-size:.82rem;color:#4f6679;margin-top:5px}
+  .metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}.metric-card{padding:16px;border-radius:14px;background:#f5f9fc;border:1px solid #e1e9ef}.metric-number{font:800 1.5rem var(--font-display);color:#0d3b66}.metric-label{font-size:.76rem;color:#5b7185;margin-top:4px}
+  .install-banner,.update-banner{position:fixed;z-index:100;left:50%;transform:translateX(-50%);bottom:22px;width:min(680px,calc(100% - 28px));display:flex;align-items:center;gap:14px;background:rgba(7,18,34,.96);color:#fff;border:1px solid rgba(255,255,255,.18);box-shadow:0 18px 55px rgba(0,0,0,.45);border-radius:16px;padding:13px 14px}.install-banner.hidden,.update-banner.hidden{display:none}.install-banner div{flex:1;display:flex;flex-direction:column;gap:3px}.install-banner span{font-size:.75rem;color:#b8cada}.install-close{border:0;background:transparent;color:#fff;font-size:1rem;cursor:pointer}
+  @media(max-width:760px){body{padding-bottom:76px}.topbar{position:sticky;padding:10px 14px}.brand-tag{display:none}.topbar-actions{width:100%;margin-left:0}.main-tabs{position:fixed;z-index:50;left:0;right:0;bottom:0;background:rgba(5,12,22,.96);backdrop-filter:blur(14px);padding:8px 6px max(8px,env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(6,1fr);gap:3px;border-top:1px solid rgba(255,255,255,.12)}.main-tabs button{padding:9px 3px;border:0;border-radius:10px;font-size:.64rem;white-space:nowrap}.page{padding:18px 12px 24px}.day-tabs{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}.day-tabs button{flex:0 0 auto}.rodizio-grids{grid-template-columns:1fr}.area-block{overflow-x:auto}.dashboard-grid{grid-template-columns:1fr}.efficiency-row{grid-template-columns:90px 1fr 46px}.install-banner{bottom:82px;align-items:flex-start}.install-banner .btn{padding:9px 12px}.update-banner{bottom:82px}}
+
 </style>
 </head>
 <body>
@@ -293,6 +329,7 @@
     <div class="topbar-actions">
       <nav class="main-tabs">
         <button data-page="inicio" class="active">Início</button>
+        <button data-page="dashboard">Dashboard</button>
         <button data-page="formacao">Formação</button>
         <button data-page="cadastro">Cadastro</button>
         <button data-page="listas">Listas</button>
@@ -318,19 +355,65 @@
         <div class="setor-selector hidden" id="setor-selector"></div>
       </div>
       <div class="rodizio-toolbar">
-        <button class="btn" id="btn-gerar">⚡ Gerar rodízio automaticamente</button>
+        <button class="btn" id="btn-gerar">⚡ Gerar rodízio mais eficiente</button>
         <button class="btn ghost" id="btn-copiar">📋 Copiar Rodízio</button>
         <button class="btn ghost" id="btn-limpar">🧹 Limpar Rodízio</button>
         <button class="btn" id="btn-exportar">📤 Exportar imagem</button>
       </div>
+      <div id="day-efficiency" class="efficiency-card"></div>
       <div class="rodizio-grids" id="rodizio-grids"></div>
-      <p class="crit-hint">🟢 Verde · 🟡 Amarelo · 🔴 Vermelho — classificação do posto · 🔒 vaga travada por Formação</p>
+      <p class="crit-hint">🟢 Verde · 🟡 Amarelo · 🔴 Vermelho — classificação do posto · 🔒 vaga travada por Formação/Reposição · <b style="color:#d93636">Ausente</b> · <b style="color:#6d35c5">Empréstimo</b> · <b style="color:#8a6d00">Sênior</b></p>
       <div class="ausentes-panel">
         <h3>Ausentes</h3>
         <p class="hint-small">Remover um ausente não desfaz substituições já feitas — gere novamente se precisar reverter.</p>
         <div class="ausentes-slots" id="ausentes-slots"></div>
+        <div class="reposicoes-panel">
+          <div class="reposicoes-head">
+            <div>
+              <h3>Repor Ausências</h3>
+              <p class="hint-small" style="margin-bottom:0;">Cadastre Sênior ou Empréstimo e defina o posto de cada rodízio. A reposição fica travada e não muda ao gerar o rodízio automático.</p>
+            </div>
+            <button class="btn" type="button" id="btn-add-reposicao">+ Adicionar</button>
+          </div>
+          <div class="reposicoes-list" id="reposicoes-list"></div>
+        </div>
       </div>
     </div>
+    <p class="footnote">Criado por: Thiago Vaz - LB14762</p>
+  </main>
+
+  <main id="page-dashboard" class="page">
+    <div class="card">
+      <div class="dashboard-head">
+        <div>
+          <h2>Dashboard de Eficiência</h2>
+          <p class="hint-small">A eficiência considera cobertura dos postos, variedade de postos por operador, equilíbrio de carga e repetição mínima do mesmo posto no dia.</p>
+        </div>
+        <button class="btn" id="btn-gerar-semana">⚡ Gerar rodízio mais eficiente</button>
+      </div>
+      <div id="dashboard-week-efficiency"></div>
+    </div>
+    <div class="dashboard-grid">
+      <section class="card stacked-card">
+        <h2>Operadores escalados por posto</h2>
+        <p class="hint-small">Quantidade de operadores diferentes que passam por cada posto na semana atual.</p>
+        <div id="chart-post-operators" class="bar-chart"></div>
+      </section>
+      <section class="card stacked-card">
+        <h2>Carga semanal por operador</h2>
+        <p class="hint-small">Total de posições ocupadas por cada operador nos rodízios da semana.</p>
+        <div id="chart-employee-load" class="bar-chart"></div>
+      </section>
+    </div>
+    <section class="card stacked-card">
+      <h2>Quem passa em cada posto na semana</h2>
+      <input type="text" id="dashboard-post-search" class="search-box" placeholder="Buscar posto...">
+      <div id="dashboard-post-details" class="post-week-list"></div>
+    </section>
+    <section class="card stacked-card">
+      <h2>Indicadores de justiça do rodízio</h2>
+      <div id="dashboard-fairness" class="metric-grid"></div>
+    </section>
     <p class="footnote">Criado por: Thiago Vaz - LB14762</p>
   </main>
 
@@ -482,6 +565,15 @@
   <p class="footnote">Alterações são salvas automaticamente neste navegador. Use a aba Backup para guardar uma cópia à parte ou transferir para outro computador.</p>
 </div>
 
+<div class="install-banner hidden" id="install-banner">
+  <div><strong>📱 Instale o Rodízio RGdB</strong><span>Use como aplicativo no celular ou computador, inclusive offline.</span></div>
+  <button class="btn" id="btn-install-app">Instalar</button>
+  <button class="install-close" id="btn-install-close" aria-label="Fechar">✕</button>
+</div>
+<div class="update-banner hidden" id="update-banner">
+  <span>🔄 Nova versão disponível.</span><button class="btn" id="btn-update-app">Atualizar agora</button>
+</div>
+
 <div class="modal-overlay hidden" id="modal-overlay">
   <div class="modal" id="modal-content"></div>
 </div>
@@ -562,9 +654,10 @@
     schedule: {},
     absentees: {},
     formacoes: [],
-    formacaoDismissed: []
+    formacaoDismissed: [],
+    reposicoes: {}
   };
-  DAYS.forEach(function(d){ state.absentees[d.id] = [null,null,null,null,null,null]; });
+  DAYS.forEach(function(d){ state.absentees[d.id] = [null,null,null,null,null,null]; state.reposicoes[d.id] = []; });
 
   (function seedScheduleFromImages(){
     function findEmployeeByName(name){
@@ -641,6 +734,7 @@
         absentees: state.absentees,
         formacoes: state.formacoes,
         formacaoDismissed: state.formacaoDismissed,
+        reposicoes: state.reposicoes,
         savedAt: new Date().toISOString()
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
@@ -662,7 +756,8 @@
       if(data.absentees) state.absentees = data.absentees;
       if(data.formacoes) state.formacoes = data.formacoes;
       if(data.formacaoDismissed) state.formacaoDismissed = data.formacaoDismissed;
-      DAYS.forEach(function(d){ if(!state.absentees[d.id]) state.absentees[d.id] = [null,null,null,null,null,null]; });
+      if(data.reposicoes) state.reposicoes = data.reposicoes;
+      DAYS.forEach(function(d){ if(!state.absentees[d.id]) state.absentees[d.id] = [null,null,null,null,null,null]; if(!state.reposicoes[d.id]) state.reposicoes[d.id] = []; });
       state.posts.forEach(function(p){ if(!p.criticidade) p.criticidade='verde'; if(!p.epis) p.epis=[]; });
       state.employees.forEach(function(e){ if(!e.postIds) e.postIds=[]; });
       return true;
@@ -681,6 +776,7 @@
   function findEmployee(id){ return state.employees.filter(function(e){return e.id===id;})[0]; }
   function findSetor(id){ return state.setores.filter(function(s){return s.id===id;})[0]; }
   function findFormacao(id){ return state.formacoes.filter(function(f){return f.id===id;})[0]; }
+  function findReposicao(day,id){ return (state.reposicoes[day]||[]).filter(function(r){return r.id===id;})[0]; }
   function critLabel(c){ return c==='amarelo' ? 'Amarelo' : c==='vermelho' ? 'Vermelho' : 'Verde'; }
   function critColor(c){ return c==='amarelo' ? '#ffcc33' : c==='vermelho' ? '#ff5c5c' : '#3ddc84'; }
   function escapeHtml(s){
@@ -689,7 +785,7 @@
     });
   }
   function resolveOccupant(val){
-    if(val==null || val==='SENIOR') return null;
+    if(val==null || val==='SENIOR' || val==='AUSENTE' || (typeof val==='string' && val.indexOf('REP:')===0)) return null;
     if(typeof val==='string' && val.indexOf('FORM:')===0){
       var f = findFormacao(val.slice(5));
       return f ? f.traineeId : null;
@@ -705,7 +801,7 @@
   }
 
   /* ---------- rotation generation (maximum bipartite matching per column + rescue pass) ---------- */
-  function generateForDay(day){
+  function generateCandidateForDay(day){
     var n = slotCount(day);
     var absentSet = {};
     (state.absentees[day]||[]).forEach(function(id){ if(id) absentSet[id]=true; });
@@ -714,8 +810,14 @@
 
     var activeFormacoes = day==='sabado' ? [] : state.formacoes.filter(function(f){ return f.col < n; });
     var lockedPostCol = {};
+    var lockedReposicao = {};
     var colExcluded = [];
     for(var i=0;i<n;i++) colExcluded.push({});
+    (state.reposicoes[day]||[]).forEach(function(r){
+      (r.postIds||[]).forEach(function(pid, col){
+        if(pid && col<n) lockedReposicao[pid+'_'+col] = r;
+      });
+    });
     activeFormacoes.forEach(function(f){
       lockedPostCol[f.postId+'_'+f.col] = f;
       colExcluded[f.col][f.traineeId] = true;
@@ -724,6 +826,7 @@
 
     var dayAppearance = {};
     var dayRed = {};
+    var dayPostCount = {};
     var redInCol = [];
     for(var i2=0;i2<n;i2++) redInCol.push({});
 
@@ -740,7 +843,7 @@
     });
 
     for(var col=0; col<n; col++){
-      var postsToFill = state.posts.filter(function(p){ return !lockedPostCol[p.id+'_'+col]; });
+      var postsToFill = state.posts.filter(function(p){ return !lockedPostCol[p.id+'_'+col] && !lockedReposicao[p.id+'_'+col]; });
 
       (function(col, postsToFill){
         function isBlocked(e, post){
@@ -755,6 +858,8 @@
         }
         function candidatesFor(post){
           return state.employees.filter(function(e){ return !isBlocked(e, post); }).sort(function(a,b){
+            var ap=dayPostCount[a.id+'|'+post.id]||0, bp=dayPostCount[b.id+'|'+post.id]||0;
+            if(ap!==bp) return ap-bp;
             var au=dayAppearance[a.id]||0, bu=dayAppearance[b.id]||0;
             if(au!==bu) return au-bu;
             if(post.criticidade==='vermelho'){
@@ -794,18 +899,25 @@
           if(empId){
             sched[post.id][col] = empId;
             dayAppearance[empId] = (dayAppearance[empId]||0)+1;
+            dayPostCount[empId+'|'+post.id] = (dayPostCount[empId+'|'+post.id]||0)+1;
             if(post.criticidade==='vermelho'){
               dayRed[empId] = (dayRed[empId]||0)+1;
               redInCol[col][empId] = true;
             }
           } else {
-            sched[post.id][col] = 'SENIOR';
+            sched[post.id][col] = 'AUSENTE';
           }
         });
       })(col, postsToFill);
 
       activeFormacoes.filter(function(f){ return f.col===col; }).forEach(function(f){
         sched[f.postId][col] = 'FORM:'+f.id;
+      });
+      Object.keys(lockedReposicao).forEach(function(key){
+        var parts = key.split('_');
+        if(parseInt(parts[parts.length-1],10)!==col) return;
+        var pid = parts.slice(0,-1).join('_');
+        if(sched[pid]) sched[pid][col] = 'REP:'+lockedReposicao[key].id;
       });
     }
 
@@ -827,7 +939,7 @@
           if(prevOccupant===e.id || nextOccupant===e.id) continue;
           if(post.criticidade==='vermelho' && col>0 && redInCol[col-1][e.id]) continue;
           var current = sched[postId][col];
-          if(current==='SENIOR' || current===null){
+          if(current==='AUSENTE' || current==='SENIOR' || current===null){
             sched[postId][col] = e.id;
             dayAppearance[e.id] = 1;
             if(post.criticidade==='vermelho'){ dayRed[e.id]=(dayRed[e.id]||0)+1; redInCol[col][e.id]=true; }
@@ -851,13 +963,102 @@
     return leftover;
   }
 
+  function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
+
+  function scheduleMetrics(day, sched){
+    sched = sched || state.schedule[day] || {};
+    var n=slotCount(day), total=0, filled=0, absent=0, repeatSamePost=0, qualificationErrors=0;
+    var perEmployee={}, perEmployeePosts={}, perCol=[];
+    for(var c=0;c<n;c++) perCol.push({total:0,filled:0,repeat:0});
+    state.posts.forEach(function(post){
+      var arr=sched[post.id]||[];
+      var prev=null;
+      for(var col=0;col<n;col++){
+        total++; perCol[col].total++;
+        var val=arr[col];
+        if(val==='AUSENTE' || val==='SENIOR' || val==null){ absent++; }
+        else { filled++; perCol[col].filled++; }
+        var empId=resolveOccupant(val);
+        if(empId){
+          perEmployee[empId]=(perEmployee[empId]||0)+1;
+          if(!perEmployeePosts[empId]) perEmployeePosts[empId]={};
+          perEmployeePosts[empId][post.id]=(perEmployeePosts[empId][post.id]||0)+1;
+          var emp=findEmployee(empId);
+          if(emp && emp.postIds.indexOf(post.id)===-1) qualificationErrors++;
+          if(prev===empId){ repeatSamePost++; perCol[col].repeat++; }
+          prev=empId;
+        } else prev=null;
+      }
+    });
+    var repeatedAssignments=0, distinctPairs=0;
+    Object.keys(perEmployeePosts).forEach(function(eid){
+      Object.keys(perEmployeePosts[eid]).forEach(function(pid){
+        var k=perEmployeePosts[eid][pid]; distinctPairs++;
+        if(k>1) repeatedAssignments += (k-1);
+      });
+    });
+    var loads=Object.keys(perEmployee).map(function(k){return perEmployee[k];});
+    var avg=loads.length ? loads.reduce(function(a,b){return a+b;},0)/loads.length : 0;
+    var variance=loads.length ? loads.reduce(function(a,b){return a+Math.pow(b-avg,2);},0)/loads.length : 0;
+    var balancePenalty=Math.min(15,variance*3.5);
+    var coverage=total ? (filled/total)*100 : 100;
+    var repeatPenalty=total ? (repeatedAssignments/total)*55 : 0;
+    var consecutivePenalty=total ? (repeatSamePost/total)*90 : 0;
+    var qualPenalty=qualificationErrors*12;
+    var score=Math.max(0,Math.min(100,coverage-repeatPenalty-consecutivePenalty-balancePenalty-qualPenalty));
+    var colScores=perCol.map(function(x){
+      var cv=x.total ? x.filled/x.total*100 : 100;
+      return Math.max(0,Math.min(100,cv-(x.repeat*8)));
+    });
+    return {score:score,coverage:coverage,absent:absent,total:total,repeatedAssignments:repeatedAssignments,repeatSamePost:repeatSamePost,balancePenalty:balancePenalty,loads:perEmployee,colScores:colScores,distinctPairs:distinctPairs};
+  }
+
+  function generateForDay(day, trials){
+    trials = trials || 90;
+    var original=deepClone(state.schedule[day] || emptyStructureFor(day));
+    var best=null, bestScore=-1, bestLeft=[];
+    for(var i=0;i<trials;i++){
+      state.schedule[day]=deepClone(original);
+      var left=generateCandidateForDay(day) || [];
+      var candidate=deepClone(state.schedule[day]);
+      var m=scheduleMetrics(day,candidate);
+      if(m.score>bestScore){ bestScore=m.score; best=candidate; bestLeft=left.slice(); }
+      if(bestScore>=99.5) break;
+    }
+    state.schedule[day]=best || original;
+    saveStateToLocalStorage();
+    return bestLeft;
+  }
+
+  function weekMetrics(){
+    var vals=DAYS.map(function(d){return scheduleMetrics(d.id);});
+    var active=vals.filter(function(m){return m.total>0;});
+    var score=active.length?active.reduce(function(a,m){return a+m.score;},0)/active.length:100;
+    var coverage=active.length?active.reduce(function(a,m){return a+m.coverage;},0)/active.length:100;
+    var repeats=active.reduce(function(a,m){return a+m.repeatedAssignments;},0);
+    var absent=active.reduce(function(a,m){return a+m.absent;},0);
+    return {score:score,coverage:coverage,repeats:repeats,absent:absent,days:vals};
+  }
+
+  function generateBestWeek(){
+    var allLeft=[];
+    DAYS.forEach(function(d){ var left=generateForDay(d.id,55); if(left.length) allLeft.push(dayLabel(d.id)+': '+left.join(', ')); });
+    saveStateToLocalStorage();
+    renderRodizio(); renderDashboard();
+    return allLeft;
+  }
+
   function reapplyFormacaoLocks(day){
-    if(day==='sabado') return;
     var sched = state.schedule[day];
     if(!sched) return;
     var n = slotCount(day);
-    state.formacoes.filter(function(f){ return f.col<n; }).forEach(function(f){
-      if(sched[f.postId]) sched[f.postId][f.col] = 'FORM:'+f.id;
+    if(day!=='sabado'){
+      state.formacoes.filter(function(f){ return f.col<n; }).forEach(function(f){
+        if(sched[f.postId]) sched[f.postId][f.col] = 'FORM:'+f.id;
+      });
+    }
+    (state.reposicoes[day]||[]).forEach(function(r){
+      (r.postIds||[]).forEach(function(pid,col){ if(pid && col<n && sched[pid]) sched[pid][col]='REP:'+r.id; });
     });
   }
 
@@ -908,7 +1109,7 @@
             usedThisCol[pick.id] = true;
             if(post.criticidade==='vermelho') redInCol[col][pick.id]=true;
           } else {
-            sched[post.id][col] = 'SENIOR';
+            sched[post.id][col] = 'AUSENTE';
           }
         }
       });
@@ -963,13 +1164,19 @@
     var posts = state.posts.filter(function(p){ return p.setorId===setorId; });
     var sched = state.schedule[day];
     var headerCols = '';
-    for(var i=0;i<n;i++) headerCols += '<th>'+(i+1)+'º</th>';
+    var metrics=scheduleMetrics(day);
+    for(var i=0;i<n;i++) headerCols += '<th class="turn-head turn-'+i+'">'+(i+1)+'º<span class="turn-eff">Eficiência '+Math.round(metrics.colScores[i]||0)+'%</span></th>';
     var rows = posts.map(function(post){
       var cells = '';
       for(var c=0;c<n;c++){
         var val = sched ? sched[post.id][c] : null;
         var cls = 'cell', text = '—';
-        if(val==='SENIOR'){ cls+=' senior'; text='⚠ Sênior (muitas ausências)'; }
+        if(val==='AUSENTE' || val==='SENIOR'){ cls+=' ausente'; text='Ausente'; }
+        else if(typeof val==='string' && val.indexOf('REP:')===0){
+          var rep = findReposicao(day, val.slice(4));
+          if(rep){ cls += ' reposicao '+(rep.type==='EMPRESTIMO'?'emprestimo':'senior'); text = '🔒 '+escapeHtml(rep.name); }
+          else { cls+=' ausente'; text='Ausente'; }
+        }
         else if(typeof val==='string' && val.indexOf('FORM:')===0){
           var f = findFormacao(val.slice(5));
           if(f){
@@ -980,12 +1187,24 @@
         }
         else if(val){ var emp=findEmployee(val); text = emp?escapeHtml(emp.name):'—'; }
         else { cls+=' empty'; text='—'; }
-        cells += '<td class="'+cls+'" data-action="assign" data-day="'+day+'" data-post="'+post.id+'" data-col="'+c+'">'+text+'</td>';
+        cells += '<td class="'+cls+' turn-'+c+'" data-action="assign" data-day="'+day+'" data-post="'+post.id+'" data-col="'+c+'">'+text+'</td>';
       }
       return '<tr><td class="post-code" data-action="view-post" data-post="'+post.id+'"><span class="crit-dot crit-'+post.criticidade+'"></span>'+escapeHtml(post.name)+'</td>'+cells+'</tr>';
     }).join('');
     if(!posts.length) rows = '<tr><td colspan="'+(n+1)+'" class="empty-msg" style="padding:14px;">Nenhum posto cadastrado para este setor.</td></tr>';
     return '<table class="rodizio"><thead><tr><th>QUA</th>'+headerCols+'</tr></thead><tbody>'+rows+'</tbody></table>';
+  }
+
+  function efficiencyBar(label,value){
+    value=Math.max(0,Math.min(100,Number(value)||0));
+    return '<div class="efficiency-row"><strong>'+escapeHtml(label)+'</strong><div class="efficiency-track"><div class="efficiency-fill" style="width:'+value.toFixed(1)+'%"></div></div><span class="efficiency-value">'+Math.round(value)+'%</span></div>';
+  }
+  function renderDayEfficiency(){
+    var el=document.getElementById('day-efficiency'); if(!el) return;
+    var m=scheduleMetrics(currentDay);
+    var html=efficiencyBar('Eficiência do dia',m.score);
+    m.colScores.forEach(function(v,i){ html+=efficiencyBar((i+1)+'º rodízio',v); });
+    el.innerHTML=html;
   }
 
   function renderRodizioGrids(){
@@ -1017,7 +1236,43 @@
     }).join('');
   }
 
-  function renderRodizio(){ renderRodizioGrids(); renderAusentes(); }
+  function renderReposicoes(){
+    saveStateToLocalStorage();
+    var container = document.getElementById('reposicoes-list');
+    if(!container) return;
+    var list = state.reposicoes[currentDay] || [];
+    if(!list.length){ container.innerHTML = '<p class="empty-msg">Nenhuma reposição cadastrada para '+dayLabel(currentDay)+'.</p>'; return; }
+    container.innerHTML = list.map(function(r){
+      var turnos = (r.postIds||[]).map(function(pid,i){ var p=pid?findPost(pid):null; return p ? (i+1)+'º: '+escapeHtml(p.name) : null; }).filter(Boolean).join(' · ');
+      return '<div class="reposicao-item"><div class="reposicao-meta"><span class="reposicao-badge '+(r.type==='EMPRESTIMO'?'emprestimo':'senior')+'">'+(r.type==='EMPRESTIMO'?'Empréstimo':'Sênior')+'</span><strong>'+escapeHtml(r.name)+'</strong><span class="hint-small" style="margin:0;">'+turnos+'</span></div><button data-action="remove-reposicao" data-id="'+r.id+'">Excluir</button></div>';
+    }).join('');
+  }
+
+  function openReposicaoModal(){
+    var n = slotCount(currentDay);
+    function opts(){ return '<option value="">Não repor neste rodízio</option>'+state.posts.map(function(p){ var setor=findSetor(p.setorId); return '<option value="'+p.id+'">'+escapeHtml(p.name)+(setor?' · '+escapeHtml(setor.name):'')+'</option>'; }).join(''); }
+    var turnos = '';
+    for(var c=0;c<3;c++){
+      if(c>=n) turnos += '<label>'+(c+1)+'º rodízio<select disabled><option>Não utilizado neste dia</option></select></label>';
+      else turnos += '<label>'+(c+1)+'º rodízio<select id="rep-post-'+c+'">'+opts()+'</select></label>';
+    }
+    showModal('<span class="modal-close" data-action="close">✕</span><h3>Repor Ausência</h3><p class="modal-hint">Informe quem fará a reposição. O nome ficará travado nos postos selecionados mesmo após gerar o rodízio automático.</p><div class="reposicao-grid"><label>Tipo<select id="rep-type"><option value="SENIOR">Sênior</option><option value="EMPRESTIMO">Empréstimo</option></select></label><label>Nome<input id="rep-name" type="text" placeholder="Nome da pessoa"></label></div><div class="reposicao-turnos">'+turnos+'</div><div class="modal-footer-actions"><button class="btn" data-action="save-reposicao">Salvar reposição</button></div>');
+    var input=document.getElementById('rep-name'); if(input) input.focus();
+  }
+
+  function applyReposicaoToSchedule(day, r){
+    if(!state.schedule[day]) state.schedule[day]=emptyStructureFor(day);
+    var n=slotCount(day);
+    (r.postIds||[]).forEach(function(pid,col){ if(pid && col<n && state.schedule[day][pid]) state.schedule[day][pid][col]='REP:'+r.id; });
+  }
+
+  function removeReposicao(day,id){
+    var sched=state.schedule[day];
+    if(sched){ Object.keys(sched).forEach(function(pid){ sched[pid]=sched[pid].map(function(v){ return v==='REP:'+id ? 'AUSENTE' : v; }); }); }
+    state.reposicoes[day]=(state.reposicoes[day]||[]).filter(function(r){ return r.id!==id; });
+  }
+
+  function renderRodizio(){ renderDayEfficiency(); renderRodizioGrids(); renderAusentes(); renderReposicoes(); if(document.getElementById('page-dashboard').classList.contains('active')) renderDashboard(); }
 
   function renderSetorSelector(){
     saveStateToLocalStorage();
@@ -1376,7 +1631,7 @@
       '<p class="modal-hint">Selecione quem assume este posto:</p>'+
       '<div class="modal-list">'+rows+'</div>'+
       '<div class="modal-footer-actions">'+
-        '<button class="btn ghost" data-action="mark-senior" data-day="'+day+'" data-post="'+postId+'" data-col="'+col+'">Marcar Sênior</button>'+
+        '<button class="btn ghost" data-action="mark-ausente" data-day="'+day+'" data-post="'+postId+'" data-col="'+col+'">Marcar Ausente</button>'+
         '<button class="btn ghost" data-action="clear-cell" data-day="'+day+'" data-post="'+postId+'" data-col="'+col+'">Limpar</button>'+
       '</div>'
     );
@@ -1473,10 +1728,15 @@
         var val = sched ? sched[post.id][c] : null;
         var cellX = x+colPostWidth + c*colTurnoWidth;
         var text, color, font;
-        if(val==='SENIOR'){
-          ctx.fillStyle='#ffcc33';
+        if(val==='AUSENTE' || val==='SENIOR'){
+          ctx.fillStyle='#ff5c5c';
           ctx.fillRect(cellX+2, rowY+2, colTurnoWidth-4, IMG_ROW_H-4);
-          text='Sênior'; color='#5c4200'; font='700 11px "Inter", sans-serif';
+          text='Ausente'; color='#ffffff'; font='700 11px "Inter", sans-serif';
+        } else if(typeof val==='string' && val.indexOf('REP:')===0){
+          var rep = findReposicao(currentDay, val.slice(4));
+          ctx.fillStyle = rep && rep.type==='EMPRESTIMO' ? '#8b5cf6' : '#ffcc33';
+          ctx.fillRect(cellX+2, rowY+2, colTurnoWidth-4, IMG_ROW_H-4);
+          text = rep ? rep.name : 'Ausente'; color = rep && rep.type==='EMPRESTIMO' ? '#ffffff' : '#5c4200'; font='700 11px "Inter", sans-serif';
         } else if(typeof val==='string' && val.indexOf('FORM:')===0){
           var f = findFormacao(val.slice(5));
           ctx.fillStyle='#e7edff';
@@ -1616,6 +1876,7 @@
       absentees: state.absentees,
       formacoes: state.formacoes,
       formacaoDismissed: state.formacaoDismissed,
+      reposicoes: state.reposicoes,
       selectedSetorIds: state.selectedSetorIds,
       exportedAt: new Date().toISOString()
     };
@@ -1646,6 +1907,7 @@
       absentees: state.absentees,
       formacoes: state.formacoes,
       formacaoDismissed: state.formacaoDismissed,
+      reposicoes: state.reposicoes,
       exportedAt: new Date().toISOString()
     };
     var filename = triggerJsonDownload(payload, 'backup-completo', label);
@@ -1698,6 +1960,7 @@
         }
         if(data.formacoes){ state.formacoes = data.formacoes; touched.push('formações'); }
         if(data.formacaoDismissed) state.formacaoDismissed = data.formacaoDismissed;
+        if(data.reposicoes){ state.reposicoes = data.reposicoes; DAYS.forEach(function(d){ if(!state.reposicoes[d.id]) state.reposicoes[d.id]=[]; }); touched.push('reposições'); }
         if(!touched.length){ showToast('Arquivo de backup vazio ou inválido.'); return; }
         expandedFuncionarios = {}; expandedPostos = {}; expandedSetores = {};
         renderAllSetorDependent();
@@ -1711,9 +1974,42 @@
     reader.readAsText(file);
   }
 
+  function scheduledNamesByPost(){
+    var out={}; state.posts.forEach(function(p){out[p.id]={};});
+    DAYS.forEach(function(d){ var sched=state.schedule[d.id]||{}; state.posts.forEach(function(p){ (sched[p.id]||[]).forEach(function(v){ var eid=resolveOccupant(v); if(eid) out[p.id][eid]=true; }); }); });
+    return out;
+  }
+  function weeklyEmployeeLoad(){
+    var out={}; DAYS.forEach(function(d){ var sched=state.schedule[d.id]||{}; state.posts.forEach(function(p){ (sched[p.id]||[]).forEach(function(v){ var eid=resolveOccupant(v); if(eid) out[eid]=(out[eid]||0)+1; }); }); }); return out;
+  }
+  function renderBars(containerId,items){
+    var el=document.getElementById(containerId); if(!el) return;
+    var max=Math.max.apply(null,items.map(function(x){return x.value;}).concat([1]));
+    el.innerHTML=items.map(function(x){return '<div class="bar-row" title="'+escapeHtml(x.label)+': '+x.value+'"><span class="bar-label">'+escapeHtml(x.label)+'</span><div class="bar-track"><div class="bar-fill" style="width:'+(x.value/max*100).toFixed(1)+'%"></div></div><span class="bar-value">'+x.value+'</span></div>';}).join('') || '<p class="empty-msg">Sem dados.</p>';
+  }
+  function renderDashboard(){
+    var wk=weekMetrics(), e=document.getElementById('dashboard-week-efficiency');
+    if(e){ var h=efficiencyBar('Eficiência geral',wk.score)+efficiencyBar('Cobertura geral',wk.coverage); wk.days.forEach(function(m,i){h+=efficiencyBar(DAYS[i].label,m.score);}); e.innerHTML=h; }
+    var map=scheduledNamesByPost();
+    var postItems=state.posts.map(function(p){return {label:p.name,value:Object.keys(map[p.id]||{}).length};}).sort(function(a,b){return b.value-a.value;});
+    renderBars('chart-post-operators',postItems);
+    var loads=weeklyEmployeeLoad();
+    var empItems=state.employees.map(function(emp){return {label:emp.name,value:loads[emp.id]||0};}).sort(function(a,b){return b.value-a.value;});
+    renderBars('chart-employee-load',empItems);
+    var q=((document.getElementById('dashboard-post-search')||{}).value||'').toLowerCase().trim();
+    var det=document.getElementById('dashboard-post-details');
+    if(det) det.innerHTML=state.posts.filter(function(p){return !q || p.name.toLowerCase().indexOf(q)!==-1;}).map(function(p){ var ids=Object.keys(map[p.id]||{}), names=ids.map(function(id){var emp=findEmployee(id);return emp?emp.name:id;}).sort(); return '<div class="post-week-item"><strong>'+escapeHtml(p.name)+'</strong><div class="post-week-names">'+(names.length?escapeHtml(names.join(' · ')):'Nenhum operador escalado')+'</div></div>';}).join('');
+    var fairness=document.getElementById('dashboard-fairness');
+    if(fairness){
+      var loadVals=Object.keys(loads).map(function(k){return loads[k];}), maxLoad=loadVals.length?Math.max.apply(null,loadVals):0,minLoad=loadVals.length?Math.min.apply(null,loadVals):0;
+      fairness.innerHTML='<div class="metric-card"><div class="metric-number">'+Math.round(wk.score)+'%</div><div class="metric-label">Eficiência geral</div></div><div class="metric-card"><div class="metric-number">'+wk.repeats+'</div><div class="metric-label">Repetições do mesmo posto</div></div><div class="metric-card"><div class="metric-number">'+wk.absent+'</div><div class="metric-label">Vagas sem cobertura</div></div><div class="metric-card"><div class="metric-number">'+(maxLoad-minLoad)+'</div><div class="metric-label">Diferença máx. de carga entre operadores</div></div>';
+    }
+  }
+
   function switchPage(page){
     document.querySelectorAll('.main-tabs button').forEach(function(b){ b.classList.toggle('active', b.dataset.page===page); });
     document.querySelectorAll('.page').forEach(function(p){ p.classList.toggle('active', p.id==='page-'+page); });
+    if(page==='dashboard') renderDashboard();
   }
   function switchDay(day){
     currentDay = day;
@@ -1732,6 +2028,7 @@
     renderFormacaoSuggestions();
     renderListaFormacoes();
     switchDay('segunda');
+    renderDashboard();
     setInterval(saveStateToLocalStorage, 15000);
     window.addEventListener('beforeunload', saveStateToLocalStorage);
 
@@ -1744,14 +2041,20 @@
 
     document.getElementById('btn-gerar').addEventListener('click', function(){
       var leftover = generateForDay(currentDay);
-      renderRodizioGrids();
+      renderRodizio();
       if(leftover && leftover.length){
         showLeftoverWarning(currentDay, leftover);
       } else {
-        showToast('Rodízio gerado para '+dayLabel(currentDay));
+        showToast('Melhor rodízio encontrado · eficiência '+Math.round(scheduleMetrics(currentDay).score)+'%');
       }
     });
+    document.getElementById('btn-gerar-semana').addEventListener('click', function(){
+      var btn=this, old=btn.textContent; btn.disabled=true; btn.textContent='⏳ Otimizando semana...';
+      setTimeout(function(){ var left=generateBestWeek(); btn.disabled=false; btn.textContent=old; showToast('Semana otimizada · eficiência '+Math.round(weekMetrics().score)+'%'); if(left.length) console.warn('Sem encaixe:',left); },40);
+    });
+    document.getElementById('dashboard-post-search').addEventListener('input', renderDashboard);
     document.getElementById('btn-copiar').addEventListener('click', openSaveModal);
+    document.getElementById('btn-add-reposicao').addEventListener('click', openReposicaoModal);
     document.getElementById('btn-limpar').addEventListener('click', function(){
       if(!confirm('Limpar todo o rodízio de '+dayLabel(currentDay)+'? Essa ação não pode ser desfeita.')) return;
       state.schedule[currentDay] = emptyStructureFor(currentDay);
@@ -1801,6 +2104,8 @@
           DAYS.forEach(function(d){ if(!state.absentees[d.id]) state.absentees[d.id] = [null,null,null,null,null,null]; });
           state.formacoes = data.formacoes || [];
           state.formacaoDismissed = data.formacaoDismissed || [];
+          state.reposicoes = data.reposicoes || state.reposicoes || {};
+          DAYS.forEach(function(d){ if(!state.reposicoes[d.id]) state.reposicoes[d.id]=[]; });
           if(data.selectedSetorIds) state.selectedSetorIds = data.selectedSetorIds;
           renderRodizio();
           renderListaFormacoes();
@@ -1872,12 +2177,15 @@
         var curVal = state.schedule[dayA] ? state.schedule[dayA][postA][colA] : null;
         if(typeof curVal==='string' && curVal.indexOf('FORM:')===0){
           showToast('Esta vaga é uma Formação travada — edite ou remova na aba Formação.');
+        } else if(typeof curVal==='string' && curVal.indexOf('REP:')===0){
+          showToast('Esta vaga é uma reposição travada — exclua em Repor Ausências para alterar.');
         } else {
           openAssignModal(dayA, postA, colA);
         }
       }
       else if(action==='add-absent') openAbsentModal(parseInt(t.dataset.idx,10));
       else if(action==='remove-absent'){ state.absentees[currentDay][parseInt(t.dataset.idx,10)] = null; renderAusentes(); }
+      else if(action==='remove-reposicao'){ removeReposicao(currentDay,t.dataset.id); renderRodizio(); showToast('Reposição removida.'); }
     });
     document.getElementById('page-inicio').addEventListener('change', function(e){
       var t = e.target;
@@ -2042,7 +2350,7 @@
           var sched = state.schedule[d.id];
           if(sched){
             Object.keys(sched).forEach(function(pid){
-              sched[pid] = sched[pid].map(function(v){ return v===id ? 'SENIOR' : v; });
+              sched[pid] = sched[pid].map(function(v){ return v===id ? 'AUSENTE' : v; });
             });
           }
           state.absentees[d.id] = state.absentees[d.id].map(function(v){ return v===id ? null : v; });
@@ -2125,12 +2433,32 @@
       if(action==='pick-assign'){
         state.schedule[t.dataset.day][t.dataset.post][parseInt(t.dataset.col,10)] = t.dataset.emp;
         closeModal(); renderRodizioGrids();
-      } else if(action==='mark-senior'){
-        state.schedule[t.dataset.day][t.dataset.post][parseInt(t.dataset.col,10)] = 'SENIOR';
+      } else if(action==='mark-ausente'){
+        state.schedule[t.dataset.day][t.dataset.post][parseInt(t.dataset.col,10)] = 'AUSENTE';
         closeModal(); renderRodizioGrids();
       } else if(action==='clear-cell'){
         state.schedule[t.dataset.day][t.dataset.post][parseInt(t.dataset.col,10)] = null;
         closeModal(); renderRodizioGrids();
+      } else if(action==='save-reposicao'){
+        var type=document.getElementById('rep-type').value;
+        var name=document.getElementById('rep-name').value.trim();
+        var nrep=slotCount(currentDay), postIds=[];
+        for(var rc=0;rc<3;rc++){ var sel=document.getElementById('rep-post-'+rc); postIds.push(sel && rc<nrep ? sel.value : ''); }
+        if(!name){ showToast('Informe o nome da reposição.'); return; }
+        if(!postIds.some(Boolean)){ showToast('Selecione ao menos um posto para a reposição.'); return; }
+        var conflict=null;
+        postIds.forEach(function(pid,col){
+          if(!pid || conflict) return;
+          var existing=(state.reposicoes[currentDay]||[]).filter(function(r){ return (r.postIds||[])[col]===pid; })[0];
+          var form=state.formacoes.filter(function(f){ return currentDay!=='sabado' && f.col===col && f.postId===pid; })[0];
+          if(existing || form) conflict=(col+1)+'º rodízio · '+(findPost(pid)?findPost(pid).name:'posto');
+        });
+        if(conflict){ showToast('Já existe uma vaga travada em '+conflict+'.'); return; }
+        var rep={id:uid('r'), type:type, name:name, postIds:postIds};
+        if(!state.reposicoes[currentDay]) state.reposicoes[currentDay]=[];
+        state.reposicoes[currentDay].push(rep);
+        applyReposicaoToSchedule(currentDay,rep);
+        closeModal(); renderRodizio(); showToast('Reposição de '+name+' salva e travada no rodízio.');
       } else if(action==='pick-absent'){
         var idx = parseInt(t.dataset.idx,10);
         var empId = t.dataset.emp;
@@ -2158,13 +2486,31 @@
 })();
 </script>
 <script>
+(function(){
+  var deferredInstall=null, reloading=false;
+  var installBanner=document.getElementById('install-banner');
+  var updateBanner=document.getElementById('update-banner');
+  function isStandalone(){ return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true; }
+  window.addEventListener('beforeinstallprompt',function(e){ e.preventDefault(); deferredInstall=e; if(!isStandalone() && localStorage.getItem('rgdb_install_dismissed')!=='1') installBanner.classList.remove('hidden'); });
+  document.getElementById('btn-install-app').addEventListener('click',function(){ if(!deferredInstall){ alert('No Android/Chrome, abra o menu do navegador e escolha “Instalar app” ou “Adicionar à tela inicial”.'); return; } deferredInstall.prompt(); deferredInstall.userChoice.finally(function(){ deferredInstall=null; installBanner.classList.add('hidden'); }); });
+  document.getElementById('btn-install-close').addEventListener('click',function(){ installBanner.classList.add('hidden'); localStorage.setItem('rgdb_install_dismissed','1'); });
+  window.addEventListener('appinstalled',function(){ installBanner.classList.add('hidden'); deferredInstall=null; });
+  if(!isStandalone()){ setTimeout(function(){ if(localStorage.getItem('rgdb_install_dismissed')!=='1') installBanner.classList.remove('hidden'); },2200); }
+
   if('serviceWorker' in navigator){
-    window.addEventListener('load', function(){
-      navigator.serviceWorker.register('sw.js').catch(function(err){
-        console.warn('Falha ao registrar o service worker:', err);
-      });
+    var regRef=null;
+    window.addEventListener('load',function(){
+      navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(function(reg){
+        regRef=reg; reg.update();
+        if(reg.waiting) updateBanner.classList.remove('hidden');
+        reg.addEventListener('updatefound',function(){ var nw=reg.installing; if(!nw)return; nw.addEventListener('statechange',function(){ if(nw.state==='installed' && navigator.serviceWorker.controller) updateBanner.classList.remove('hidden'); }); });
+      }).catch(function(err){ console.warn('Falha ao registrar o service worker:',err); });
     });
+    document.getElementById('btn-update-app').addEventListener('click',function(){ if(regRef && regRef.waiting) regRef.waiting.postMessage({type:'SKIP_WAITING'}); else location.reload(); });
+    navigator.serviceWorker.addEventListener('controllerchange',function(){ if(reloading)return; reloading=true; location.reload(); });
+    window.addEventListener('focus',function(){ if(regRef) regRef.update(); });
   }
+})();
 </script>
 </body>
 </html>
