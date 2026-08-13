@@ -311,13 +311,18 @@
   table.rodizio th.turn-0,table.rodizio td.turn-0{background:rgba(47,111,237,.035)}
   table.rodizio th.turn-1,table.rodizio td.turn-1{background:rgba(23,193,160,.045)}
   table.rodizio th.turn-2,table.rodizio td.turn-2{background:rgba(255,204,51,.055)}
+  /* Status sempre prevalecem sobre as cores suaves das colunas */
+  table.rodizio td.cell.ausente{background:#e5484d!important;color:#fff!important;font-weight:800}
+  table.rodizio td.cell.reposicao.senior{background:#ffcc33!important;color:#5c4200!important;font-weight:800}
+  table.rodizio td.cell.reposicao.emprestimo{background:#7c3aed!important;color:#fff!important;font-weight:800}
+
   .dashboard-head{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}.dashboard-head h2{margin-bottom:6px}
   .dashboard-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}.dashboard-grid .stacked-card{margin-top:22px}
   .bar-chart{display:grid;gap:9px;max-height:520px;overflow:auto;padding-right:5px}.bar-row{display:grid;grid-template-columns:minmax(75px,130px) 1fr 42px;gap:10px;align-items:center;font-size:.78rem}.bar-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bar-track{height:12px;background:#e6edf2;border-radius:999px;overflow:hidden}.bar-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--teal),var(--green));border-radius:999px}.bar-value{text-align:right;font-family:var(--font-mono);font-weight:700}
   .post-week-list{display:grid;gap:10px;margin-top:14px}.post-week-item{padding:12px 14px;border:1px solid #e2eaf0;border-radius:12px;background:#fff}.post-week-item strong{font-family:var(--font-mono);color:#0d3b66}.post-week-names{font-size:.82rem;color:#4f6679;margin-top:5px}
   .metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}.metric-card{padding:16px;border-radius:14px;background:#f5f9fc;border:1px solid #e1e9ef}.metric-number{font:800 1.5rem var(--font-display);color:#0d3b66}.metric-label{font-size:.76rem;color:#5b7185;margin-top:4px}
   .install-banner,.update-banner{position:fixed;z-index:100;left:50%;transform:translateX(-50%);bottom:22px;width:min(680px,calc(100% - 28px));display:flex;align-items:center;gap:14px;background:rgba(7,18,34,.96);color:#fff;border:1px solid rgba(255,255,255,.18);box-shadow:0 18px 55px rgba(0,0,0,.45);border-radius:16px;padding:13px 14px}.install-banner.hidden,.update-banner.hidden{display:none}.install-banner div{flex:1;display:flex;flex-direction:column;gap:3px}.install-banner span{font-size:.75rem;color:#b8cada}.install-close{border:0;background:transparent;color:#fff;font-size:1rem;cursor:pointer}
-  @media(max-width:760px){body{padding-bottom:76px}.topbar{position:sticky;padding:10px 14px}.brand-tag{display:none}.topbar-actions{width:100%;margin-left:0}.main-tabs{position:fixed;z-index:50;left:0;right:0;bottom:0;background:rgba(5,12,22,.96);backdrop-filter:blur(14px);padding:8px 6px max(8px,env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(6,1fr);gap:3px;border-top:1px solid rgba(255,255,255,.12)}.main-tabs button{padding:9px 3px;border:0;border-radius:10px;font-size:.64rem;white-space:nowrap}.page{padding:18px 12px 24px}.day-tabs{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}.day-tabs button{flex:0 0 auto}.rodizio-grids{grid-template-columns:1fr}.area-block{overflow-x:auto}.dashboard-grid{grid-template-columns:1fr}.efficiency-row{grid-template-columns:90px 1fr 46px}.install-banner{bottom:82px;align-items:flex-start}.install-banner .btn{padding:9px 12px}.update-banner{bottom:82px}}
+  @media(max-width:760px){body{padding-bottom:84px}.topbar{position:relative;z-index:10;padding:12px 14px;min-height:60px;display:flex;align-items:center;justify-content:space-between}.logo{height:34px;max-width:46vw;object-fit:contain;position:relative;z-index:12}.brand-tag{display:none}.topbar-actions{width:auto;margin-left:auto}.main-tabs{position:fixed;z-index:60;left:0;right:0;bottom:0;background:rgba(5,12,22,.97);backdrop-filter:blur(14px);padding:8px 6px max(8px,env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(6,1fr);gap:3px;border-top:1px solid rgba(255,255,255,.12);box-shadow:0 -10px 30px rgba(0,0,0,.25)}.main-tabs button{padding:9px 3px;border:0;border-radius:10px;font-size:.64rem;white-space:nowrap}.page{padding:18px 12px 28px}.day-tabs{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}.day-tabs button{flex:0 0 auto}.rodizio-grids{grid-template-columns:1fr}.area-block{overflow-x:auto}.dashboard-grid{grid-template-columns:1fr}.efficiency-row{grid-template-columns:90px 1fr 46px}.install-banner{bottom:90px;align-items:flex-start}.install-banner .btn{padding:9px 12px}.update-banner{bottom:90px}td.cell.ausente{background:#e5484d!important;color:#fff!important}td.cell.reposicao.senior{background:#ffcc33!important;color:#5c4200!important}td.cell.reposicao.emprestimo{background:#7c3aed!important;color:#fff!important}}
 
 </style>
 </head>
@@ -387,7 +392,7 @@
       <div class="dashboard-head">
         <div>
           <h2>Dashboard de Eficiência</h2>
-          <p class="hint-small">A eficiência considera cobertura dos postos, variedade de postos por operador, equilíbrio de carga e repetição mínima do mesmo posto no dia.</p>
+          <p class="hint-small">A eficiência cai com repetição de posto, ausências, uso de Sênior/Empréstimo e dias sem rodízio completo. Na semana, também penaliza operador repetindo o mesmo posto mais de 3 vezes.</p>
         </div>
         <button class="btn" id="btn-gerar-semana">⚡ Gerar rodízio mais eficiente</button>
       </div>
@@ -395,14 +400,14 @@
     </div>
     <div class="dashboard-grid">
       <section class="card stacked-card">
-        <h2>Operadores escalados por posto</h2>
-        <p class="hint-small">Quantidade de operadores diferentes que passam por cada posto na semana atual.</p>
-        <div id="chart-post-operators" class="bar-chart"></div>
+        <h2>🏆 Ranking de funcionários mais versáteis</h2>
+        <p class="hint-small">Funcionários ordenados pela quantidade de postos em que estão formados.</p>
+        <div id="chart-employee-versatility" class="bar-chart"></div>
       </section>
       <section class="card stacked-card">
-        <h2>Carga semanal por operador</h2>
-        <p class="hint-small">Total de posições ocupadas por cada operador nos rodízios da semana.</p>
-        <div id="chart-employee-load" class="bar-chart"></div>
+        <h2>🎯 Postos com maior cobertura de formação</h2>
+        <p class="hint-small">Postos ordenados pela quantidade de funcionários habilitados para executá-los.</p>
+        <div id="chart-post-trained" class="bar-chart"></div>
       </section>
     </div>
     <section class="card stacked-card">
@@ -967,17 +972,24 @@
 
   function scheduleMetrics(day, sched){
     sched = sched || state.schedule[day] || {};
-    var n=slotCount(day), total=0, filled=0, absent=0, repeatSamePost=0, qualificationErrors=0;
+    var n=slotCount(day), total=0, normalFilled=0, absent=0, senior=0, emprestimo=0, repeatSamePost=0, qualificationErrors=0;
     var perEmployee={}, perEmployeePosts={}, perCol=[];
-    for(var c=0;c<n;c++) perCol.push({total:0,filled:0,repeat:0});
+    for(var c=0;c<n;c++) perCol.push({total:0,filled:0});
     state.posts.forEach(function(post){
       var arr=sched[post.id]||[];
       var prev=null;
       for(var col=0;col<n;col++){
         total++; perCol[col].total++;
         var val=arr[col];
-        if(val==='AUSENTE' || val==='SENIOR' || val==null){ absent++; }
-        else { filled++; perCol[col].filled++; }
+        if(val==='AUSENTE' || val==='SENIOR' || val==null){ absent++; prev=null; continue; }
+        if(typeof val==='string' && val.indexOf('REP:')===0){
+          var rep=findReposicao(day,val.slice(4));
+          if(rep && rep.type==='EMPRESTIMO') emprestimo++; else senior++;
+          perCol[col].filled++;
+          prev=null;
+          continue;
+        }
+        normalFilled++; perCol[col].filled++;
         var empId=resolveOccupant(val);
         if(empId){
           perEmployee[empId]=(perEmployee[empId]||0)+1;
@@ -985,36 +997,31 @@
           perEmployeePosts[empId][post.id]=(perEmployeePosts[empId][post.id]||0)+1;
           var emp=findEmployee(empId);
           if(emp && emp.postIds.indexOf(post.id)===-1) qualificationErrors++;
-          if(prev===empId){ repeatSamePost++; perCol[col].repeat++; }
+          if(prev===empId) repeatSamePost++;
           prev=empId;
         } else prev=null;
       }
     });
-    var repeatedAssignments=0, distinctPairs=0;
+    var repeatedAssignments=0;
     Object.keys(perEmployeePosts).forEach(function(eid){
-      Object.keys(perEmployeePosts[eid]).forEach(function(pid){
-        var k=perEmployeePosts[eid][pid]; distinctPairs++;
-        if(k>1) repeatedAssignments += (k-1);
-      });
+      Object.keys(perEmployeePosts[eid]).forEach(function(pid){ var k=perEmployeePosts[eid][pid]; if(k>1) repeatedAssignments += (k-1); });
     });
-    var loads=Object.keys(perEmployee).map(function(k){return perEmployee[k];});
-    var avg=loads.length ? loads.reduce(function(a,b){return a+b;},0)/loads.length : 0;
-    var variance=loads.length ? loads.reduce(function(a,b){return a+Math.pow(b-avg,2);},0)/loads.length : 0;
-    var balancePenalty=Math.min(15,variance*3.5);
-    var coverage=total ? (filled/total)*100 : 100;
-    var repeatPenalty=total ? (repeatedAssignments/total)*55 : 0;
-    var consecutivePenalty=total ? (repeatSamePost/total)*90 : 0;
-    var qualPenalty=qualificationErrors*12;
-    var score=Math.max(0,Math.min(100,coverage-repeatPenalty-consecutivePenalty-balancePenalty-qualPenalty));
-    var colScores=perCol.map(function(x){
-      var cv=x.total ? x.filled/x.total*100 : 100;
-      return Math.max(0,Math.min(100,cv-(x.repeat*8)));
-    });
-    return {score:score,coverage:coverage,absent:absent,total:total,repeatedAssignments:repeatedAssignments,repeatSamePost:repeatSamePost,balancePenalty:balancePenalty,loads:perEmployee,colScores:colScores,distinctPairs:distinctPairs};
+    var covered=normalFilled+senior+emprestimo;
+    var coverage=total ? covered/total*100 : 100;
+    var absentRate=total ? absent/total : 0;
+    var repoRate=total ? (senior+emprestimo)/total : 0;
+    var repeatRate=total ? repeatedAssignments/total : 0;
+    var consecutiveRate=total ? repeatSamePost/total : 0;
+    // Regra de eficiência diária: ausência pesa mais; reposição reduz eficiência mesmo cobrindo o posto;
+    // repetição do mesmo posto reduz a justiça do rodízio, com peso extra se for consecutiva.
+    var penalty = absentRate*55 + repoRate*22 + repeatRate*34 + consecutiveRate*20 + qualificationErrors*12;
+    var score=Math.max(0,Math.min(100,100-penalty));
+    var colScores=perCol.map(function(x){return x.total ? x.filled/x.total*100 : 100;});
+    return {score:score,coverage:coverage,absent:absent,senior:senior,emprestimo:emprestimo,total:total,repeatedAssignments:repeatedAssignments,repeatSamePost:repeatSamePost,loads:perEmployee,colScores:colScores,perEmployeePosts:perEmployeePosts};
   }
 
   function generateForDay(day, trials){
-    trials = trials || 90;
+    trials = trials || 140;
     var original=deepClone(state.schedule[day] || emptyStructureFor(day));
     var best=null, bestScore=-1, bestLeft=[];
     for(var i=0;i<trials;i++){
@@ -1023,29 +1030,47 @@
       var candidate=deepClone(state.schedule[day]);
       var m=scheduleMetrics(day,candidate);
       if(m.score>bestScore){ bestScore=m.score; best=candidate; bestLeft=left.slice(); }
-      if(bestScore>=99.5) break;
+      if(bestScore>=99.8) break;
     }
     state.schedule[day]=best || original;
     saveStateToLocalStorage();
     return bestLeft;
   }
 
-  function weekMetrics(){
-    var vals=DAYS.map(function(d){return scheduleMetrics(d.id);});
-    var active=vals.filter(function(m){return m.total>0;});
-    var score=active.length?active.reduce(function(a,m){return a+m.score;},0)/active.length:100;
-    var coverage=active.length?active.reduce(function(a,m){return a+m.coverage;},0)/active.length:100;
-    var repeats=active.reduce(function(a,m){return a+m.repeatedAssignments;},0);
-    var absent=active.reduce(function(a,m){return a+m.absent;},0);
-    return {score:score,coverage:coverage,repeats:repeats,absent:absent,days:vals};
+  function weekMetrics(scheduleOverride){
+    var vals=DAYS.map(function(d){return scheduleMetrics(d.id, scheduleOverride ? scheduleOverride[d.id] : null);});
+    var base=vals.length?vals.reduce(function(a,m){return a+m.score;},0)/vals.length:100;
+    var coverage=vals.length?vals.reduce(function(a,m){return a+m.coverage;},0)/vals.length:100;
+    var repeats=vals.reduce(function(a,m){return a+m.repeatedAssignments;},0);
+    var absent=vals.reduce(function(a,m){return a+m.absent;},0);
+    var senior=vals.reduce(function(a,m){return a+m.senior;},0), emprestimo=vals.reduce(function(a,m){return a+m.emprestimo;},0);
+    var weeklyPairCounts={}, incompleteDays=0;
+    DAYS.forEach(function(d,idx){
+      var m=vals[idx], sched=scheduleOverride ? (scheduleOverride[d.id]||{}) : (state.schedule[d.id]||{}), meaningful=0;
+      state.posts.forEach(function(p){ (sched[p.id]||[]).forEach(function(v){ if(v && v!=='AUSENTE' && v!=='SENIOR') meaningful++; var eid=resolveOccupant(v); if(eid){ var key=eid+'|'+p.id; weeklyPairCounts[key]=(weeklyPairCounts[key]||0)+1; } }); });
+      if(m.total>0 && (meaningful/m.total)<0.8) incompleteDays++;
+    });
+    var overThree=0;
+    Object.keys(weeklyPairCounts).forEach(function(k){ if(weeklyPairCounts[k]>3) overThree += weeklyPairCounts[k]-3; });
+    // Justiça semanal: repetições acima de 3 no mesmo posto e dias sem rodízio completo reduzem a nota geral.
+    var weeklyPenalty = Math.min(30,overThree*2.5) + incompleteDays*8;
+    var score=Math.max(0,Math.min(100,base-weeklyPenalty));
+    return {score:score,coverage:coverage,repeats:repeats,absent:absent,senior:senior,emprestimo:emprestimo,days:vals,overThree:overThree,incompleteDays:incompleteDays};
   }
 
   function generateBestWeek(){
-    var allLeft=[];
-    DAYS.forEach(function(d){ var left=generateForDay(d.id,55); if(left.length) allLeft.push(dayLabel(d.id)+': '+left.join(', ')); });
-    saveStateToLocalStorage();
-    renderRodizio(); renderDashboard();
-    return allLeft;
+    var originalWeek=deepClone(state.schedule), bestWeek=deepClone(state.schedule), bestScore=-1, bestLeft=[];
+    for(var attempt=0;attempt<10;attempt++){
+      state.schedule=deepClone(originalWeek);
+      var left=[];
+      DAYS.forEach(function(d){ var l=generateForDay(d.id,45); if(l.length) left.push(dayLabel(d.id)+': '+l.join(', ')); });
+      var score=weekMetrics().score;
+      if(score>bestScore){ bestScore=score; bestWeek=deepClone(state.schedule); bestLeft=left.slice(); }
+      if(bestScore>=99.5) break;
+    }
+    state.schedule=bestWeek;
+    saveStateToLocalStorage(); renderRodizio(); renderDashboard();
+    return bestLeft;
   }
 
   function reapplyFormacaoLocks(day){
@@ -1202,9 +1227,7 @@
   function renderDayEfficiency(){
     var el=document.getElementById('day-efficiency'); if(!el) return;
     var m=scheduleMetrics(currentDay);
-    var html=efficiencyBar('Eficiência do dia',m.score);
-    m.colScores.forEach(function(v,i){ html+=efficiencyBar((i+1)+'º rodízio',v); });
-    el.innerHTML=html;
+    el.innerHTML=efficiencyBar('Eficiência do dia',m.score);
   }
 
   function renderRodizioGrids(){
@@ -1989,20 +2012,23 @@
   }
   function renderDashboard(){
     var wk=weekMetrics(), e=document.getElementById('dashboard-week-efficiency');
-    if(e){ var h=efficiencyBar('Eficiência geral',wk.score)+efficiencyBar('Cobertura geral',wk.coverage); wk.days.forEach(function(m,i){h+=efficiencyBar(DAYS[i].label,m.score);}); e.innerHTML=h; }
+    if(e){
+      var h='<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:14px 0 8px"><div><div class="hint-small" style="margin:0">Eficiência geral da semana</div><div style="font:800 2.35rem var(--font-display);color:#0d3b66">'+Math.round(wk.score)+'%</div></div><div class="hint-small" style="margin:0">'+wk.incompleteDays+' dia(s) incompleto(s) · '+wk.overThree+' repetição(ões) acima de 3x</div></div>';
+      h+=efficiencyBar('Eficiência geral',wk.score);
+      wk.days.forEach(function(m,i){h+=efficiencyBar(DAYS[i].label,m.score);});
+      e.innerHTML=h;
+    }
+    var versatility=state.employees.map(function(emp){return {label:emp.name,value:(emp.postIds||[]).length};}).sort(function(a,b){return b.value-a.value || a.label.localeCompare(b.label);});
+    renderBars('chart-employee-versatility',versatility);
+    var trained=state.posts.map(function(p){ var count=state.employees.filter(function(emp){return (emp.postIds||[]).indexOf(p.id)!==-1;}).length; return {label:p.name,value:count}; }).sort(function(a,b){return b.value-a.value || a.label.localeCompare(b.label);});
+    renderBars('chart-post-trained',trained);
     var map=scheduledNamesByPost();
-    var postItems=state.posts.map(function(p){return {label:p.name,value:Object.keys(map[p.id]||{}).length};}).sort(function(a,b){return b.value-a.value;});
-    renderBars('chart-post-operators',postItems);
-    var loads=weeklyEmployeeLoad();
-    var empItems=state.employees.map(function(emp){return {label:emp.name,value:loads[emp.id]||0};}).sort(function(a,b){return b.value-a.value;});
-    renderBars('chart-employee-load',empItems);
     var q=((document.getElementById('dashboard-post-search')||{}).value||'').toLowerCase().trim();
     var det=document.getElementById('dashboard-post-details');
     if(det) det.innerHTML=state.posts.filter(function(p){return !q || p.name.toLowerCase().indexOf(q)!==-1;}).map(function(p){ var ids=Object.keys(map[p.id]||{}), names=ids.map(function(id){var emp=findEmployee(id);return emp?emp.name:id;}).sort(); return '<div class="post-week-item"><strong>'+escapeHtml(p.name)+'</strong><div class="post-week-names">'+(names.length?escapeHtml(names.join(' · ')):'Nenhum operador escalado')+'</div></div>';}).join('');
     var fairness=document.getElementById('dashboard-fairness');
     if(fairness){
-      var loadVals=Object.keys(loads).map(function(k){return loads[k];}), maxLoad=loadVals.length?Math.max.apply(null,loadVals):0,minLoad=loadVals.length?Math.min.apply(null,loadVals):0;
-      fairness.innerHTML='<div class="metric-card"><div class="metric-number">'+Math.round(wk.score)+'%</div><div class="metric-label">Eficiência geral</div></div><div class="metric-card"><div class="metric-number">'+wk.repeats+'</div><div class="metric-label">Repetições do mesmo posto</div></div><div class="metric-card"><div class="metric-number">'+wk.absent+'</div><div class="metric-label">Vagas sem cobertura</div></div><div class="metric-card"><div class="metric-number">'+(maxLoad-minLoad)+'</div><div class="metric-label">Diferença máx. de carga entre operadores</div></div>';
+      fairness.innerHTML='<div class="metric-card"><div class="metric-number">'+wk.repeats+'</div><div class="metric-label">Repetições de posto no dia</div></div><div class="metric-card"><div class="metric-number">'+wk.overThree+'</div><div class="metric-label">Repetições acima de 3x/semana</div></div><div class="metric-card"><div class="metric-number">'+wk.absent+'</div><div class="metric-label">Ausências sem cobertura</div></div><div class="metric-card"><div class="metric-number">'+(wk.senior+wk.emprestimo)+'</div><div class="metric-label">Reposições Sênior/Empréstimo</div></div><div class="metric-card"><div class="metric-number">'+wk.incompleteDays+'</div><div class="metric-label">Dias com rodízio incompleto</div></div>';
     }
   }
 
