@@ -808,7 +808,7 @@
   }
 
   /* ---------- rotation generation (maximum bipartite matching per column + rescue pass) ---------- */
-  function generateCandidateForDay(day){
+  function generateCandidateForDay(day, weeklyPairBase){
     var n = slotCount(day);
     var absentSet = {};
     (state.absentees[day]||[]).forEach(function(id){ if(id) absentSet[id]=true; });
@@ -834,11 +834,24 @@
     var dayAppearance = {};
     var dayRed = {};
     var dayPostCount = {};
+    // Quando a otimização é semanal, carregamos quantas vezes cada funcionário já
+    // passou por cada posto nos dias anteriores. O gerador usa isso como uma
+    // restrição global: até 3 passagens por posto/funcionário na semana. A 4ª só
+    // pode existir quando vier de um bloqueio manual (formação/reposição) que o
+    // algoritmo não deve modificar.
+    var weeklyPairCount = {};
+    if(weeklyPairBase){ Object.keys(weeklyPairBase).forEach(function(k){ weeklyPairCount[k]=weeklyPairBase[k]; }); }
     var redInCol = [];
     for(var i2=0;i2<n;i2++) redInCol.push({});
 
     activeFormacoes.forEach(function(f){
       var post = findPost(f.postId);
+      // Formação é um bloqueio real do rodízio e também entra na memória de
+      // repetição semanal do aprendiz naquele posto.
+      if(weeklyPairBase){
+        var wkFormKey=f.traineeId+'|'+f.postId;
+        weeklyPairCount[wkFormKey]=(weeklyPairCount[wkFormKey]||0)+1;
+      }
       dayAppearance[f.traineeId] = (dayAppearance[f.traineeId]||0)+1;
       dayAppearance[f.trainerId] = (dayAppearance[f.trainerId]||0)+1;
       if(post && post.criticidade==='vermelho'){
@@ -858,6 +871,11 @@
           if(absentSet[e.id]) return true;
           if(colExcluded[col][e.id]) return true;
           if(e.restritoVerde && post.criticidade!=='verde') return true;
+          // No modo "Gerar rodízio mais eficiente" do Dashboard, o mesmo funcionário
+          // não volta ao mesmo posto no mesmo dia e também não ultrapassa 3 vezes
+          // naquele posto ao longo da semana.
+          if(weeklyPairBase && (dayPostCount[e.id+'|'+post.id]||0) >= 1) return true;
+          if(weeklyPairBase && (weeklyPairCount[e.id+'|'+post.id]||0) >= 3) return true;
           var prevOccupant = col>0 ? resolveOccupant(sched[post.id][col-1]) : null;
           if(prevOccupant===e.id) return true;
           if(post.criticidade==='vermelho' && col>0 && redInCol[col-1][e.id]) return true;
@@ -865,6 +883,8 @@
         }
         function candidatesFor(post){
           return state.employees.filter(function(e){ return !isBlocked(e, post); }).sort(function(a,b){
+            var aw=weeklyPairCount[a.id+'|'+post.id]||0, bw=weeklyPairCount[b.id+'|'+post.id]||0;
+            if(aw!==bw) return aw-bw;
             var ap=dayPostCount[a.id+'|'+post.id]||0, bp=dayPostCount[b.id+'|'+post.id]||0;
             if(ap!==bp) return ap-bp;
             var au=dayAppearance[a.id]||0, bu=dayAppearance[b.id]||0;
@@ -907,6 +927,7 @@
             sched[post.id][col] = empId;
             dayAppearance[empId] = (dayAppearance[empId]||0)+1;
             dayPostCount[empId+'|'+post.id] = (dayPostCount[empId+'|'+post.id]||0)+1;
+            weeklyPairCount[empId+'|'+post.id] = (weeklyPairCount[empId+'|'+post.id]||0)+1;
             if(post.criticidade==='vermelho'){
               dayRed[empId] = (dayRed[empId]||0)+1;
               redInCol[col][empId] = true;
@@ -941,6 +962,8 @@
           if(!post) continue;
           if(lockedPostCol[postId+'_'+col]) continue;
           if(e.restritoVerde && post.criticidade!=='verde') continue;
+          if(weeklyPairBase && (dayPostCount[e.id+'|'+postId]||0) >= 1) continue;
+          if(weeklyPairBase && (weeklyPairCount[e.id+'|'+postId]||0) >= 3) continue;
           var prevOccupant = col>0 ? resolveOccupant(sched[postId][col-1]) : null;
           var nextOccupant = col<n-1 ? resolveOccupant(sched[postId][col+1]) : null;
           if(prevOccupant===e.id || nextOccupant===e.id) continue;
@@ -949,6 +972,7 @@
           if(current==='AUSENTE' || current==='SENIOR' || current===null){
             sched[postId][col] = e.id;
             dayAppearance[e.id] = 1;
+            weeklyPairCount[e.id+'|'+postId] = (weeklyPairCount[e.id+'|'+postId]||0)+1;
             if(post.criticidade==='vermelho'){ dayRed[e.id]=(dayRed[e.id]||0)+1; redInCol[col][e.id]=true; }
             placed = true; break;
           } else if(typeof current==='string' && current.indexOf('FORM:')!==0){
@@ -957,6 +981,8 @@
               sched[postId][col] = e.id;
               dayAppearance[occupantId] -= 1;
               dayAppearance[e.id] = 1;
+              weeklyPairCount[occupantId+'|'+postId] = Math.max(0,(weeklyPairCount[occupantId+'|'+postId]||0)-1);
+              weeklyPairCount[e.id+'|'+postId] = (weeklyPairCount[e.id+'|'+postId]||0)+1;
               if(post.criticidade==='vermelho'){ dayRed[e.id]=(dayRed[e.id]||0)+1; redInCol[col][e.id]=true; }
               placed = true; break;
             }
@@ -1022,17 +1048,50 @@
     return {score:score,coverage:coverage,absent:absent,senior:senior,emprestimo:emprestimo,total:total,repeatedAssignments:repeatedAssignments,repeatSamePost:repeatSamePost,loads:perEmployee,colScores:colScores,perEmployeePosts:perEmployeePosts};
   }
 
-  function generateForDay(day, trials){
+  function pairCountsFromSchedule(scheduleMap, dayIds){
+    var counts={};
+    (dayIds||DAYS.map(function(d){return d.id;})).forEach(function(day){
+      var sched=(scheduleMap && scheduleMap[day]) || {};
+      state.posts.forEach(function(p){
+        (sched[p.id]||[]).forEach(function(v){
+          var eid=resolveOccupant(v);
+          if(eid){ var k=eid+'|'+p.id; counts[k]=(counts[k]||0)+1; }
+        });
+      });
+    });
+    return counts;
+  }
+
+  function projectedWeeklyExcess(baseCounts, daySchedule){
+    var counts={}; Object.keys(baseCounts||{}).forEach(function(k){counts[k]=baseCounts[k];});
+    state.posts.forEach(function(p){
+      (daySchedule[p.id]||[]).forEach(function(v){
+        var eid=resolveOccupant(v);
+        if(eid){ var k=eid+'|'+p.id; counts[k]=(counts[k]||0)+1; }
+      });
+    });
+    var excess=0; Object.keys(counts).forEach(function(k){ if(counts[k]>3) excess += counts[k]-3; });
+    return excess;
+  }
+
+  function generateForDay(day, trials, options){
     trials = trials || 140;
+    options = options || {};
     var original=deepClone(state.schedule[day] || emptyStructureFor(day));
-    var best=null, bestScore=-1, bestLeft=[];
+    var best=null, bestScore=-Infinity, bestLeft=[];
+    var weeklyBase=options.weeklyPairBase || null;
     for(var i=0;i<trials;i++){
       state.schedule[day]=deepClone(original);
-      var left=generateCandidateForDay(day) || [];
+      var left=generateCandidateForDay(day, weeklyBase) || [];
       var candidate=deepClone(state.schedule[day]);
       var m=scheduleMetrics(day,candidate);
-      if(m.score>bestScore){ bestScore=m.score; best=candidate; bestLeft=left.slice(); }
-      if(bestScore>=99.8) break;
+      // Na otimização semanal, a nota do dia também considera o efeito global.
+      // Uma 4ª passagem pelo mesmo posto recebe uma penalidade muito alta para
+      // nunca vencer uma combinação sem repetição excessiva.
+      var excess = weeklyBase ? projectedWeeklyExcess(weeklyBase,candidate) : 0;
+      var combinedScore = m.score - excess*40 - left.length*8;
+      if(combinedScore>bestScore){ bestScore=combinedScore; best=candidate; bestLeft=left.slice(); }
+      if(m.score>=99.8 && excess===0 && left.length===0) break;
     }
     state.schedule[day]=best || original;
     saveStateToLocalStorage();
@@ -1107,14 +1166,32 @@
   }
 
   function generateBestWeek(){
-    var originalWeek=deepClone(state.schedule), bestWeek=deepClone(state.schedule), bestScore=-1, bestLeft=[];
-    for(var attempt=0;attempt<10;attempt++){
+    var originalWeek=deepClone(state.schedule), bestWeek=deepClone(state.schedule), bestScore=-Infinity, bestLeft=[];
+    // O botão do Dashboard agora otimiza a semana como um único problema, em vez
+    // de gerar seis dias independentes. Cada dia conhece as escolhas dos dias
+    // anteriores e evita passar de 3 ocorrências funcionário/posto na semana.
+    for(var attempt=0;attempt<24;attempt++){
       state.schedule=deepClone(originalWeek);
-      var left=[];
-      DAYS.forEach(function(d){ var l=generateForDay(d.id,45); if(l.length) left.push(dayLabel(d.id)+': '+l.join(', ')); });
-      var score=weekMetrics().score;
-      if(score>bestScore){ bestScore=score; bestWeek=deepClone(state.schedule); bestLeft=left.slice(); }
-      if(bestScore>=99.5) break;
+      var left=[], pairCounts={};
+      DAYS.forEach(function(d){
+        var l=generateForDay(d.id,90,{weeklyPairBase:pairCounts});
+        if(l.length) left.push(dayLabel(d.id)+': '+l.join(', '));
+        // Atualiza a memória semanal somente depois de escolher a melhor solução
+        // daquele dia, para o próximo dia respeitar o que já foi escalado.
+        var chosen=state.schedule[d.id]||{};
+        state.posts.forEach(function(p){
+          (chosen[p.id]||[]).forEach(function(v){
+            var eid=resolveOccupant(v);
+            if(eid){ var k=eid+'|'+p.id; pairCounts[k]=(pairCounts[k]||0)+1; }
+          });
+        });
+      });
+      var wm=weekMetrics();
+      // Prioridade absoluta: zero ocorrências acima de 3x. Depois maximiza a
+      // eficiência geral e, em empate, prefere a semana sem postos sem encaixe.
+      var objective = wm.score - wm.overThree*100 - left.length*15;
+      if(objective>bestScore){ bestScore=objective; bestWeek=deepClone(state.schedule); bestLeft=left.slice(); }
+      if(wm.overThree===0 && left.length===0 && wm.score>=99.5) break;
     }
     state.schedule=bestWeek;
     saveStateToLocalStorage(); renderRodizio(); renderDashboard();
