@@ -655,8 +655,7 @@
     absentees: {},
     formacoes: [],
     formacaoDismissed: [],
-    reposicoes: {},
-    efficiencyBaseline: null
+    reposicoes: {}
   };
   DAYS.forEach(function(d){ state.absentees[d.id] = [null,null,null,null,null,null]; state.reposicoes[d.id] = []; });
 
@@ -736,7 +735,6 @@
         formacoes: state.formacoes,
         formacaoDismissed: state.formacaoDismissed,
         reposicoes: state.reposicoes,
-        efficiencyBaseline: state.efficiencyBaseline,
         savedAt: new Date().toISOString()
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
@@ -759,7 +757,6 @@
       if(data.formacoes) state.formacoes = data.formacoes;
       if(data.formacaoDismissed) state.formacaoDismissed = data.formacaoDismissed;
       if(data.reposicoes) state.reposicoes = data.reposicoes;
-      if(data.efficiencyBaseline && typeof data.efficiencyBaseline === 'object') state.efficiencyBaseline = data.efficiencyBaseline;
       DAYS.forEach(function(d){ if(!state.absentees[d.id]) state.absentees[d.id] = [null,null,null,null,null,null]; if(!state.reposicoes[d.id]) state.reposicoes[d.id] = []; });
       state.posts.forEach(function(p){ if(!p.criticidade) p.criticidade='verde'; if(!p.epis) p.epis=[]; });
       state.employees.forEach(function(e){ if(!e.postIds) e.postIds=[]; });
@@ -801,6 +798,24 @@
     var out = {};
     state.posts.forEach(function(p){ out[p.id] = new Array(n).fill(null); });
     return out;
+  }
+
+  /* ---------- deterministic pseudo-randomness ---------- */
+  // O gerador usa uma sequência reproduzível em vez de Math.random(). Isso evita que
+  // dois dispositivos com os mesmos dados encontrem rodízios diferentes apenas por acaso.
+  var _rngState = 0x6d2b79f5;
+  function hashString32(str){
+    var h=2166136261>>>0;
+    for(var i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619); }
+    return h>>>0;
+  }
+  function setDeterministicSeed(seedText){ _rngState = hashString32(String(seedText)) || 0x6d2b79f5; }
+  function deterministicRandom(){
+    _rngState = (_rngState + 0x6D2B79F5) >>> 0;
+    var t=_rngState;
+    t=Math.imul(t ^ (t>>>15), t | 1);
+    t^=t + Math.imul(t ^ (t>>>7), t | 61);
+    return ((t ^ (t>>>14)) >>> 0) / 4294967296;
   }
 
   /* ---------- rotation generation (maximum bipartite matching per column + rescue pass) ---------- */
@@ -893,7 +908,7 @@
               var ar=dayRed[a.id]||0, br=dayRed[b.id]||0;
               if(ar!==br) return ar-br;
             }
-            return Math.random()-0.5;
+            return deterministicRandom()-0.5;
           });
         }
 
@@ -955,7 +970,7 @@
       var placed = false;
       for(var col=0; col<n && !placed; col++){
         if(colExcluded[col][e.id]) continue;
-        var shuffled = e.postIds.slice().sort(function(){ return Math.random()-0.5; });
+        var shuffled = e.postIds.slice().sort(function(){ return deterministicRandom()-0.5; });
         for(var pi=0; pi<shuffled.length; pi++){
           var postId = shuffled[pi];
           var post = findPost(postId);
@@ -1088,7 +1103,17 @@
     var original=deepClone(state.schedule[day] || emptyStructureFor(day));
     var best=null, bestDayScore=-Infinity, bestWeekCost=Infinity, bestLeft=[];
     var weeklyBase=options.weeklyPairBase || null;
+    var deterministicContext = JSON.stringify({
+      day:day,
+      employees:state.employees.map(function(e){return [e.id,e.name,(e.postIds||[]).slice().sort(),!!e.restritoVerde];}),
+      posts:state.posts.map(function(p){return [p.id,p.name,p.criticidade,p.setorId];}),
+      absentees:(state.absentees[day]||[]).slice(),
+      reposicoes:state.reposicoes[day]||[],
+      formacoes:state.formacoes||[],
+      weeklyPairBase:weeklyBase||{}
+    });
     for(var i=0;i<trials;i++){
+      setDeterministicSeed(deterministicContext+'|trial:'+i);
       state.schedule[day]=deepClone(original);
       var left=generateCandidateForDay(day, weeklyBase) || [];
       var candidate=deepClone(state.schedule[day]);
@@ -1142,45 +1167,29 @@
     var underThreeEmployees=state.employees.filter(function(e){ return (e.postIds||[]).length<3; }).length;
     var restrictedEmployees=state.employees.filter(function(e){ return !!e.restritoVerde; }).length;
 
-    // Eficiência geral semanal: a condição atual da equipe vira o ponto de referência de 76%.
-    // A partir desse retrato inicial, reduzir repetições, diminuir funcionários com menos de
-    // 3 postos e reduzir restrições faz a nota subir progressivamente até 100%.
-    // Ausências, Empréstimos e Sêniores são ocorrências operacionais e podem derrubar a nota
-    // abaixo de 76%, pois representam necessidade de cobertura fora do cenário ideal.
+    // Eficiência geral semanal v13 — fórmula fixa e determinística.
+    // Não existe mais "baseline" salva no aparelho. Portanto, com os MESMOS cadastros e
+    // o MESMO rodízio, Android e PC calculam obrigatoriamente o mesmo percentual.
     //
-    // Pesos estruturais usados para distribuir os 24 pontos de evolução (76 -> 100):
-    // - repetição acima da 3ª vez no mesmo posto: peso 1 por ocorrência excedente;
-    // - funcionário com menos de 3 postos cadastrados: peso 3 por funcionário;
-    // - funcionário restrito: peso 2 por funcionário.
-    var structuralUnits = overThree + (underThreeEmployees * 3) + (restrictedEmployees * 2);
+    // A situação original do projeto fica próxima de 76% por causa da concentração semanal
+    // de funcionário/posto. Conforme essa concentração diminui, a nota sobe gradualmente
+    // até 100%, sem piso artificial.
+    //
+    // Impactos fixos:
+    // - cada ocorrência acima da 3ª vez do mesmo funcionário no mesmo posto/semana: -0,22 p.p.;
+    // - cada funcionário com menos de 3 postos cadastrados: -0,75 p.p.;
+    // - cada funcionário restrito: -0,75 p.p.;
+    // - cada ausência sem cobertura: -5 p.p.;
+    // - cada Empréstimo utilizado: -3 p.p.;
+    // - cada Sênior utilizado: -2 p.p.
+    var repeatPenalty = overThree * 0.22;
+    var versatilityPenalty = underThreeEmployees * 0.75;
+    var restrictionPenalty = restrictedEmployees * 0.75;
+    var operationalPenalty = (absent * 5) + (emprestimo * 3) + (senior * 2);
+    var score = 100 - repeatPenalty - versatilityPenalty - restrictionPenalty - operationalPenalty;
 
-    if(!state.efficiencyBaseline || state.efficiencyBaseline.version !== 9){
-      state.efficiencyBaseline = {
-        version: 9,
-        structuralUnits: Math.max(1, structuralUnits),
-        overThree: overThree,
-        underThreeEmployees: underThreeEmployees,
-        restrictedEmployees: restrictedEmployees,
-        createdAt: new Date().toISOString()
-      };
-      // Salva o retrato da condição atual apenas uma vez. Assim o sistema sabe que
-      // este cenário corresponde a aproximadamente 76% e mede a evolução real dali em diante.
-      saveStateToLocalStorage();
-    }
-
-    var baselineUnits = Math.max(1, Number(state.efficiencyBaseline.structuralUnits) || 1);
-    var structuralPenalty = 24 * (structuralUnits / baselineUnits);
-    var score = 100 - structuralPenalty;
-
-    // Ocorrências operacionais: reduzem a eficiência além do patamar estrutural atual.
-    // Elas NÃO fazem parte do ponto de referência de 76%, portanto novas faltas/reposições
-    // aparecem imediatamente na nota.
-    score -= absent * 5;
-    score -= emprestimo * 3;
-    score -= senior * 2;
-
-    // Não existe piso artificial. Se as condições piorarem a eficiência pode ficar abaixo de 76%;
-    // se todas as variáveis estruturais forem resolvidas e não houver ocorrências, chega a 100%.
+    // Sem limite mínimo: novas faltas/recomposições podem levar a nota abaixo do cenário atual.
+    // Sem as variáveis que prejudicam a escala, a eficiência chega naturalmente a 100%.
     score=Math.max(0,Math.min(100,score));
     return {score:score,coverage:coverage,repeats:repeats,absent:absent,senior:senior,emprestimo:emprestimo,days:vals,overThree:overThree,incompleteDays:incompleteDays,underThreeEmployees:underThreeEmployees,restrictedEmployees:restrictedEmployees};
   }
@@ -1315,7 +1324,8 @@
             return true;
           });
           if(candidates.length){
-            var pick = candidates[Math.floor(Math.random()*candidates.length)];
+            candidates.sort(function(a,b){ return a.name.localeCompare(b.name) || String(a.id).localeCompare(String(b.id)); });
+            var pick = candidates[0];
             sched[post.id][col] = pick.id;
             usedThisCol[pick.id] = true;
             if(post.criticidade==='vermelho') redInCol[col][pick.id]=true;
